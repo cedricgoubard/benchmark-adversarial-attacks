@@ -3,4 +3,8 @@ notebooks/.ipynb_checkpoints/
 *.egg-info
 .vscode/
 data/
+*.gif
+logs/
+
+
 
