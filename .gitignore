@@ -5,6 +5,8 @@ notebooks/.ipynb_checkpoints/
 data/
 *.gif
 logs/
+data/
+models/
 
 
 
