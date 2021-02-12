@@ -1,3 +1,7 @@
+'''
+Module training and saving models 
+'''
+
 import os
 from os.path import join,exists
 from tensorboard import program
@@ -20,6 +24,8 @@ from tensorflow.keras.layers import Lambda,Input,Dropout, Activation, Dense, Glo
 from tensorflow.keras.utils import to_categorical
 from efficientnet.tfkeras import EfficientNetB7
 from tensorflow.keras import datasets
+from art.utils import load_dataset #to play with cifar images
+
 
 from adv_benchmark.config import Config
 
@@ -27,20 +33,31 @@ from adv_benchmark.config import Config
 
 
 def pick_data_set(name):
+    '''
+    This fonction return a training and testing set 
+    input:
+    -name : 'Cifar' or 'Mnist'
+    output:
+    -X_train: list of 60000 32*32*3 images
+    -X_test: list of 10000 32*32*3 images
+    -y_train: list of 50000 one hot encoded vectors
+    -y_test: list of 10000 one hot encoded vectors
+
+    '''
 
     if name=='Mnist':
         data_mnist=datasets.mnist.load_data(path='mnist.npz')
-        X_train,y_train=data_mnist[0][0],data_mnist[0][1]
-        X_test,y_test=data_mnist[1][0],data_mnist[1][1]
-        y_train = to_categorical(y_train_mnist, 10)
-        y_test = to_categorical(y_test_mnist, 10)
+        X_train_mnist,y_train=data_mnist[0][0],data_mnist[0][1]
+        X_test_mnist,y_test=data_mnist[1][0],data_mnist[1][1]
+        y_train = to_categorical(y_train, 10)
+        y_test = to_categorical(y_test, 10)
 
         X_train = np.full((60000, 32, 32, 3), 0)
-        for i, s in enumerate(X_train):
+        for i, s in enumerate(X_train_mnist):
             X_train[i] = cv2.cvtColor(np.pad(s,2), cv2.COLOR_GRAY2RGB) 
             
         X_test = np.full((10000, 32, 32, 3), 0)
-        for i, s in enumerate(X_test):
+        for i, s in enumerate(X_test_mnist):
             X_test[i] = cv2.cvtColor(np.pad(s,2), cv2.COLOR_GRAY2RGB) 
         
     
@@ -58,6 +75,13 @@ def pick_data_set(name):
 
 
 def train_and_save_effnet(data_set_name):
+    '''
+    This fonction train (or load) and save an instance of EfficientNet
+    -name : 'Cifar' or 'Mnist'
+    output:
+    -model_effnet (tensorflow model): trained instance of EfficientNet
+
+    '''
     (X_train,X_test,y_train,y_test)=pick_data_set(data_set_name)
     tf.keras.backend.clear_session()
     effnet_base = EfficientNetB7(weights='imagenet', include_top=False, input_shape=(32, 32, 3))
@@ -71,7 +95,7 @@ def train_and_save_effnet(data_set_name):
 
 
     
-    if exists(Config.MODELS_PATH+'/effnet_model_'+str(data_set_name)+'.h5')==False:
+    if exists(Config.MODELS_PATH+'effnet_model_'+str(data_set_name)+'.h5')==False:
         model_effnet.compile(
             loss='categorical_crossentropy',
             optimizer='nadam',
@@ -83,16 +107,23 @@ def train_and_save_effnet(data_set_name):
                       validation_split=0.1,
                       shuffle=True,
                       verbose=1)
-        model_effnet.save(Config.MODELS_PATH+'/effnet_model_'+str(data_set_name)+'.h5')
+        model_effnet.save(Config.MODELS_PATH+'effnet_model_'+str(data_set_name)+'.h5')
 
     else:
-        model_effnet=load_model(Config.MODELS_PATH+'/effnet_model_'+str(data_set_name)+'.h5')
+        model_effnet=load_model(Config.MODELS_PATH+'effnet_model_'+str(data_set_name)+'.h5')
         
     return(model_effnet)
 
 def train_and_save_small_model(data_set_name):
+    '''
+    This fonction train (or load) and save an instance of a small custom CNN
+    -name : 'Cifar' or 'Mnist'
+    output:
+    -small model (tensorflow model): trained instance of the small model 
+
+    '''
     
-    if exists(Config.MODELS_PATH+'/small_model_'+str(data_set_name)+'.h5')==False:
+    if exists(Config.MODELS_PATH+'small_model_'+str(data_set_name)+'.h5')==False:
         (X_train,X_test,y_train,y_test)=pick_data_set(data_set_name)
         tf.keras.backend.clear_session()   
         small_model = tf.keras.models.Sequential()
@@ -120,7 +151,7 @@ def train_and_save_small_model(data_set_name):
                       verbose=1)
 
 
-        small_model.save(Config.MODELS_PATH+'/small_model_'+str(data_set_name)+'.h5')
+        small_model.save(Config.MODELS_PATH+'small_model_'+str(data_set_name)+'.h5')
     else:
-        small_model=load_model(Config.MODELS_PATH+'/small_model_'+str(data_set_name)+'.h5')
+        small_model=load_model(Config.MODELS_PATH+'small_model_'+str(data_set_name)+'.h5')
     return(small_model)

@@ -11,10 +11,11 @@ from os.path import join
 
 class Config(object):
     '''
-    Paths towards the data sets used by the project
+    MODELS_PATH : where the models are saved
+    DATA_PATH: where data are saved
     '''
-    MODELS_PATH = "/media/hdd1/adversarial_attacks_benchmark/models"
-    DATA_PATH = "/media/hdd1/adversarial_attacks_benchmark/data"
+    MODELS_PATH = "/media/hdd1/adversarial_attacks_benchmark/models/"
+    DATA_PATH = "/media/hdd1/adversarial_attacks_benchmark/data/"
 
     CIFAR_CLASSES=['airplane','automobile','bird','cat','deer','dog','frog','horse','ship','truck']
 

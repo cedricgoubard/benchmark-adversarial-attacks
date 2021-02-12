@@ -1,3 +1,7 @@
+'''
+Module for running the boundary attack
+'''
+
 import os
 from os.path import join,exists
 
@@ -41,6 +45,16 @@ from adv_benchmark.config import Config
 from adv_benchmark.metrics import DOC,succes_rate
 
 def boundary_attack_run(model_to_attack,target_image,iterations=100):
+    '''
+    This fonction runs the black box boundary attack
+    inputs:
+    -model_to_attack (tensorflow Model instance): model that will be attacked
+    -target_image (numpy array (32*32)): image that will be attack
+    -iterations (int): number of times to run the attack
+    output:
+    -degree_of_change (dict): keys: the number of the iteration, values: the degree of change between target and adversarial image
+
+    '''
     classifier = TensorFlowV2Classifier(model=model_to_attack, input_shape=(32,32,3),clip_values=(0, 255),nb_classes=10)
     degree_of_change={}
     attack = BoundaryAttack(estimator=classifier, targeted=False, max_iter=0, delta=0.001, epsilon=0.01)
@@ -68,13 +82,22 @@ def boundary_attack_run(model_to_attack,target_image,iterations=100):
             break
     return(degree_of_change)
 
-def gif_maker(path,gif_pictures_size=200,duration=40):
-    for i,image in enumerate(image_list_def):
+def gif_maker(path,image_list,gif_pictures_size=200,duration=40):
+     '''
+    This fonction creates a gif from an image list
+    inputs:
+    -path: path where the gif will be saved
+    -image_list (list): list of image 
+    -gif_pictures_size(int): the size to which the gif will be resized (because 32*32 is too small)
+    -duration (int): number of milliseconds that one image will remain display
+    
+    '''
+    for i,image in enumerate(image_list):
       
         im=np.array(tf.image.resize(image.astype('uint8'), [gif_pictures_size,gif_pictures_size], method='nearest', preserve_aspect_ratio=True))
         im = Image.fromarray(im.astype('uint8'), 'RGB')
         image_list_def[i]=im
 
-    image_list_def[0].save(path,
-                save_all=True, append_images=image_list_def[1:], optimize=False, duration=duration, loop=0)
+    image_list[0].save(path,
+                save_all=True, append_images=image_list[1:], optimize=False, duration=duration, loop=0)
     return()
