@@ -1,0 +1,87 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.4.1
+  kernelspec:
+    display_name: BENCHMARK
+    language: python
+    name: benchmark
+---
+
+# JSMA
+
+```{python}
+# %load_ext autoreload
+# %autoreload 2
+```
+
+```{python}
+import os
+from os.path import join
+
+import numpy as np
+import pandas as pd
+import cv2
+import pickle
+from tqdm import tqdm
+from PIL import Image
+import matplotlib.pyplot as plt
+import tensorflow as tf
+
+from art.attacks.evasion import SaliencyMapMethod
+from art.estimators.classification import TensorFlowV2Classifier
+
+
+from adv_benchmark.models_training import pick_data_set,train_and_save_effnet,train_and_save_small_model
+
+gpus = tf.config.experimental.list_physical_devices('GPU')
+tf.config.experimental.set_virtual_device_configuration(
+    gpus[0],
+    [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4*1024)]
+)
+```
+
+```{python}
+small_model=train_and_save_small_model('Mnist')
+```
+
+### Jacobian based saliency map
+
+
+After 35 minutes working, JSMA had'nt even produced a single adversarial image for efficient net. Let's try on a smaller CNN
+
+```{python}
+(X_train,X_test,y_train,y_test)=pick_data_set('Mnist')
+```
+
+```{python}
+classifier = TensorFlowV2Classifier(model=small_model, input_shape=(32,32,3),clip_values=(0, 255),nb_classes=10)
+attack =SaliencyMapMethod(classifier)
+
+x_test_adv = attack.generate(X_test[:5])
+
+predictions = classifier.predict(x_test_adv)
+accuracy = np.sum(np.argmax(predictions, axis=1) == np.argmax(y_test, axis=1)) / len(y_test)
+print("Accuracy on adversarial test examples: {}%".format(accuracy * 100))
+```
+
+```{python}
+plt.imshow(x_test_adv[0].astype('int32'))
+```
+
+```{python}
+fig=plt.figure(figsize=(10,10))
+columns = 2
+rows = 2
+for i in range(4):
+    fig.add_subplot(rows, columns, i+1)
+    plt.imshow(x_test_adv[i].astype('int32'))
+    label=np.argmax(small_model.predict(np.expand_dims(x_test_adv[i],axis=0)))
+    plt.title('Predicted label:'+str(label), fontsize=8)
+plt.show()
+```

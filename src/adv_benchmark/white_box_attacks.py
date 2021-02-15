@@ -86,13 +86,13 @@ def attack_performances_computer(model_to_attack,predicting_model,attack, image_
 
 
 def attack_runner(model_to_attack,predicting_model,image_list, labels_list, epislons_list,attack=LinfFastGradientAttack()):  
-     '''
+    '''
     This fonction launch an attack against a model and returns the performances of the attack
     
     -model_to_attack (tensorflow model): model that will be attacked 
     -predicting_model (tensorflow model): model that will predict the label of the generated 
-                adv example (most of the time it is the same that model_to_attack) but sometimes
-                it is usefull to have another model taking care of the prediction
+    adv example (most of the time it is the same that model_to_attack) but sometimes
+    it is usefull to have another model taking care of the prediction
     -image_list: list of images array (32*32*3) to attack
     -labels: labels (one hot encoding) of the image
     -epsilon_list (list of floats): list of epsilon to try 
@@ -119,19 +119,19 @@ def three_attacks_runner(model_to_attack,predicting_model,image_list, labels_lis
     
     -model_to_attack (tensorflow model): model that will be attacked 
     -predicting_model (tensorflow model): model that will predict the label of the generated 
-                adv example (most of the time it is the same that model_to_attack) but sometimes
-                it is usefull to have another model taking care of the prediction
+    adv example (most of the time it is the same that model_to_attack) but sometimes
+    it is usefull to have another model taking care of the prediction
     -image_list: list of images array (32*32*3) to attack
     -labels: labels (one hot encoding) of the image
     -epsilon_list (list of floats): list of epsilon to try 
 
     outputs:
     -SR_deepfool_1step_dic (dict): result of the attack on model to attack - keys: average DOC values computed for one epsilon, 
-                                    values: average success rate (SR) values computed for one epsilon for FGSM
+    values: average success rate (SR) values computed for one epsilon for FGSM
     -SR_deepfool_mutliple_steps_dic (dict): result of the attack on model to attack - keys: average DOC values computed for one epsilon, 
-                                    values: average success rate (SR) values computed for one epsilon for deepfool with 1 step
+    values: average success rate (SR) values computed for one epsilon for deepfool with 1 step
     -SR_FGSM_dic (dict): result of the attack on model to attack - keys: average DOC values computed for one epsilon, 
-                                    values: average success rate (SR) values computed for one epsilon for deepfool 
+    values: average success rate (SR) values computed for one epsilon for deepfool 
 
     '''
     attack_deepfool_1_steps=LinfDeepFoolAttack(steps=1)

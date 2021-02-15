@@ -1,0 +1,301 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.4.1
+  kernelspec:
+    display_name: BENCHMARK
+    language: python
+    name: benchmark
+---
+
+# Etude de l'influence de paramètres sur l'efficacité d'attaques
+
+```{python}
+# %load_ext autoreload
+# %autoreload 2
+```
+
+```{python}
+import os
+from os.path import join,exists
+
+import numpy as np
+import pandas as pd
+import cv2
+import pickle
+from tqdm import tqdm
+from PIL import Image
+import matplotlib.pyplot as plt
+
+import tensorflow as tf
+
+from sklearn.metrics import classification_report,plot_roc_curve
+
+from adv_benchmark.config import Config
+from adv_benchmark.models_training import pick_data_set,train_and_save_effnet,train_and_save_small_model
+from adv_benchmark.white_box_attacks import three_attacks_runner
+from adv_benchmark.black_box_attacks import boundary_attack_run
+
+gpus = tf.config.experimental.list_physical_devices('GPU')
+tf.config.experimental.set_virtual_device_configuration(
+    gpus[0],
+    [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=6*1024)]
+)
+```
+
+3 facteurs pouvant influencer la perfomance d'attaques adverses ont été identifié:
+- **La complexité du modèle (small custom model vs efficientnet)**
+- **La complexité de l'attaque**
+- **La complexité et la variance interne du jeu de données**
+
+
+Nous avons choisi d'étudier différent scénario pour lequel nous allons tracer à chaque fois le success rate de l'attaque en fonction du degree of change. Nous étudierons:
+- **3 attaques (deepfool 1 step, deepfool mutliple steps et FGSM)**
+- **2 modèles (efficientNet et small custom model)**
+- **2 jeux de données (Mnist et Cifar)**
+
+
+#### Mnist
+
+```{python}
+name='Mnist'
+(X_train,X_test,y_train,y_test)=pick_data_set(name)
+small_model=train_and_save_small_model(name)
+y_pred_small_model=[np.argmax(pred) for pred in small_model.predict(X_test)]
+y_true=[np.argmax(y) for y in y_test]
+classification_small_model=classification_report(y_true, y_pred_small_model)
+print('performances of the small model on '+str(name))
+print('-------------------------')
+print(classification_small_model)
+```
+
+```{python}
+name='Mnist'
+(X_train,X_test,y_train,y_test)=pick_data_set(name)
+model_effnet=train_and_save_effnet(name)
+y_pred_model_effnet=[np.argmax(pred) for pred in model_effnet.predict(X_test)]
+y_true=[np.argmax(y) for y in y_test]
+classification_small_model=classification_report(y_true, y_pred_model_effnet)
+print('performances of efficientNet on '+str(name))
+print('-------------------------')
+print(classification_small_model)
+```
+
+```{python}
+name='Cifar'
+(X_train,X_test,y_train,y_test)=pick_data_set(name)
+small_model=train_and_save_small_model(name)
+y_pred_small_model=[np.argmax(pred) for pred in small_model.predict(X_test)]
+y_true=[np.argmax(y) for y in y_test]
+classification_small_model=classification_report(y_true, y_pred_small_model)
+print('performances of the small model on '+str(name))
+print('-------------------------')
+print(classification_small_model)
+```
+
+```{python}
+name='Cifar'
+(X_train,X_test,y_train,y_test)=pick_data_set(name)
+model_effnet=train_and_save_effnet(name)
+y_pred_model_effnet=[np.argmax(pred) for pred in model_effnet.predict(X_test)]
+y_true=[np.argmax(y) for y in y_test]
+classification_small_model=classification_report(y_true, y_pred_model_effnet)
+print('performances of efficientNet on '+str(name))
+print('-------------------------')
+print(classification_small_model)
+```
+
+```{python}
+epsilon_list=[0.1,1,5,10,25,50,75,100]
+name='Mnist'
+
+(X_train,X_test,y_train,y_test)=pick_data_set(name)
+small_model=train_and_save_small_model(name)
+
+if exists(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_'+str(name))==False:
+    (SR_deepfool_1step_dic_small_model,SR_deepfool_mutliple_steps_dic_small_model,SR_FGSM_dic_small_model)=three_attacks_runner(small_model,small_model,X_test[:100], y_test[:100], epsilon_list)
+    SR_blackbox_dic_small_model=boundary_attack_run(small_model,X_test[0],iterations=150)
+
+    with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_'+str(name), 'wb') as f:
+        pickle.Pickler(f).dump(SR_deepfool_1step_dic_small_model)
+        pickle.Pickler(f).dump(SR_deepfool_mutliple_steps_dic_small_model)
+        pickle.Pickler(f).dump(SR_FGSM_dic_small_model)
+        pickle.Pickler(f).dump(SR_blackbox_dic_small_model)
+```
+
+```{python}
+epsilon_list=[0.1,1,5,10,25,50,75,100]
+name='Mnist'
+
+(X_train,X_test,y_train,y_test)=pick_data_set(name)
+model_effnet=train_and_save_effnet(name)
+
+if exists(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_'+str(name))==False:
+    (SR_deepfool_1step_dic_model_effnet,SR_deepfool_mutliple_steps_dic_model_effnet,SR_FGSM_dic_model_effnet)=three_attacks_runner(model_effnet,model_effnet,X_test[:100], y_test[:100], epsilon_list)
+    SR_blackbox_dic_model_effnet=boundary_attack_run(small_model,X_test[0],iterations=150)
+    with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_'+str(name), 'wb') as f:
+        pickle.Pickler(f).dump(SR_deepfool_1step_dic_model_effnet)
+        pickle.Pickler(f).dump(SR_deepfool_mutliple_steps_dic_model_effnet)
+        pickle.Pickler(f).dump(SR_FGSM_dic_model_effnet)
+        pickle.Pickler(f).dump(SR_blackbox_dic_model_effnet)
+```
+
+```{python}
+epsilon_list=[0.1,1,5,10,25,50,75,100]
+name='Cifar'
+
+(X_train,X_test,y_train,y_test)=pick_data_set(name)
+small_model=train_and_save_small_model(name)
+
+if exists(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_'+str(name))==False:
+    (SR_deepfool_1step_dic_small_model,SR_deepfool_mutliple_steps_dic_small_model,SR_FGSM_dic_small_model)=three_attacks_runner(small_model,small_model,X_test[:100], y_test[:100], epsilon_list)
+    SR_blackbox_dic_small_model=boundary_attack_run(small_model,X_test[0],iterations=150)
+
+    with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_'+str(name), 'wb') as f:
+        pickle.Pickler(f).dump(SR_deepfool_1step_dic_small_model)
+        pickle.Pickler(f).dump(SR_deepfool_mutliple_steps_dic_small_model)
+        pickle.Pickler(f).dump(SR_FGSM_dic_small_model)
+        pickle.Pickler(f).dump(SR_blackbox_dic_small_model)
+```
+
+```{python}
+epsilon_list=[0.1,1,5,10,25,50,75,100]
+name='Cifar'
+
+(X_train,X_test,y_train,y_test)=pick_data_set(name)
+model_effnet=train_and_save_effnet(name)
+
+if exists(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_'+str(name))==False:
+    (SR_deepfool_1step_dic_model_effnet,SR_deepfool_mutliple_steps_dic_model_effnet,SR_FGSM_dic_model_effnet)=three_attacks_runner(model_effnet,model_effnet,X_test[:100], y_test[:100], epsilon_list)
+    SR_blackbox_dic_model_effnet=boundary_attack_run(small_model,X_test[0],iterations=150)
+    with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_'+str(name), 'wb') as f:
+        pickle.Pickler(f).dump(SR_deepfool_1step_dic_model_effnet)
+        pickle.Pickler(f).dump(SR_deepfool_mutliple_steps_dic_model_effnet)
+        pickle.Pickler(f).dump(SR_FGSM_dic_model_effnet)
+        pickle.Pickler(f).dump(SR_blackbox_dic_model_effnet)
+```
+
+```{python}
+with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_Cifar', 'rb') as f:
+    SR_deepfool_1step_dic_small_model_Cifar=pickle.Unpickler(f).load()
+    SR_deepfool_mutliple_steps_dic_small_model_Cifar=pickle.Unpickler(f).load()
+    SR_FGSM_dic_small_model_Cifar=pickle.Unpickler(f).load()
+    SR_blackbox_dic_small_model_Cifar=pickle.Unpickler(f).load()
+    
+with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_Cifar', 'rb') as f:
+    SR_deepfool_1step_dic_model_effnet_Cifar=pickle.Unpickler(f).load()
+    SR_deepfool_mutliple_steps_dic_model_effnet_Cifar=pickle.Unpickler(f).load()
+    SR_FGSM_dic_model_effnet_Cifar=pickle.Unpickler(f).load()
+    SR_blackbox_dic_model_effnet_Cifar=pickle.Unpickler(f).load()
+    
+with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_Mnist', 'rb') as f:
+    SR_deepfool_1step_dic_small_model_Mnist=pickle.Unpickler(f).load()
+    SR_deepfool_mutliple_steps_dic_small_model_Mnist=pickle.Unpickler(f).load()
+    SR_FGSM_dic_small_model_Mnist=pickle.Unpickler(f).load()
+    SR_blackbox_dic_small_model_Mnist=pickle.Unpickler(f).load()
+    
+
+with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_Mnist', 'rb') as f:
+    SR_deepfool_1step_dic_model_effnet_Mnist=pickle.Unpickler(f).load()
+    SR_deepfool_mutliple_steps_dic_model_effnet_Mnist=pickle.Unpickler(f).load()
+    SR_FGSM_dic_model_effnet_Mnist=pickle.Unpickler(f).load()
+    SR_blackbox_dic_model_effnet_Mnist=pickle.Unpickler(f).load()
+```
+
+```{python}
+x_min=-10
+x_max=200
+y_min=0
+y_max=1.3
+
+plt.rcParams["figure.figsize"] = 21,14
+colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+fig, ax = plt.subplots(ncols=3, nrows=3, gridspec_kw={"height_ratios":[0.01,1,1],"width_ratios":[0.5,1,1]})
+fig.suptitle('Parameters influence on attack effectiveness', 
+             fontsize=20, fontweight='bold')
+
+
+ax[0][0].axis("off")
+ax[0][0].set_title("Data Set / Model", fontweight='bold',fontsize=15)
+
+
+ax[0][1].axis("off")
+ax[0][1].set_title("Small Model", fontweight='bold',fontsize=15)
+
+
+ax[0][2].axis("off")
+ax[0][2].set_title("EfficentNet", fontweight='bold',fontsize=15)
+
+
+ax[1][0].axis("off")
+ax[1][0].set_title("Cifar Data set", fontweight='bold',fontsize=15)
+
+
+
+ax[2][0].axis("off")
+ax[2][0].set_title("Mnist Data set", fontweight='bold',fontsize=15)
+
+
+ax[1][1].plot(list(SR_deepfool_1step_dic_small_model_Cifar.keys()),list(SR_deepfool_1step_dic_small_model_Cifar.values()),label='deepfool 1 step')
+ax[1][1].plot(list(SR_deepfool_mutliple_steps_dic_small_model_Cifar.keys()),list(SR_deepfool_mutliple_steps_dic_small_model_Cifar.values()),label='Deepfool multiple steps')
+ax[1][1].plot(list(SR_FGSM_dic_small_model_Cifar.keys()),list(SR_FGSM_dic_small_model_Cifar.values()),label='FGSM')
+ax[1][1].plot(list(SR_blackbox_dic_small_model_Cifar.values()),[1 for i in range(len(SR_blackbox_dic_small_model_Cifar))],label='boundary_attack')
+ax[1][1].grid(True,which="both", linestyle='--')
+ax[1][1].set_title('Successs rate for different degrees of change \n on Cifar images for the small model',fontsize=11)
+ax[1][1].set_xlabel('DOC (%)')
+ax[1][1].set_ylabel('SR')
+ax[1][1].legend(loc='lower right')
+ax[1][1].set_xlim(x_min,x_max)
+ax[1][1].set_ylim(y_min,y_max)
+
+
+ax[1][2].plot(list(SR_deepfool_1step_dic_model_effnet_Cifar.keys()),list(SR_deepfool_1step_dic_model_effnet_Cifar.values()),label='deepfool 1 step')
+ax[1][2].plot(list(SR_deepfool_mutliple_steps_dic_model_effnet_Cifar.keys()),list(SR_deepfool_mutliple_steps_dic_model_effnet_Cifar.values()),label='Deepfool multiple steps')
+ax[1][2].plot(list(SR_FGSM_dic_model_effnet_Cifar.keys()),list(SR_FGSM_dic_model_effnet_Cifar.values()),label='FGSM')
+ax[1][2].plot(list(SR_blackbox_dic_model_effnet_Cifar.values()),[1  for i in range(len(SR_blackbox_dic_model_effnet_Cifar))],label='boundary_attack')
+ax[1][2].grid(True,which="both", linestyle='--')
+ax[1][2].set_title('Successs rate for different degrees of change \n on Cifar images for the effnet model',fontsize=11)
+ax[1][2].set_xlabel('DOC (%)')
+ax[1][2].set_ylabel('SR')
+ax[1][2].legend(loc='lower right')
+ax[1][2].set_xlim(x_min,x_max)
+ax[1][2].set_ylim(y_min,y_max)
+
+
+
+ax[2][1].plot(list(SR_deepfool_1step_dic_small_model_Mnist.keys()),list(SR_deepfool_1step_dic_small_model_Mnist.values()),label='deepfool 1 step')
+ax[2][1].plot(list(SR_deepfool_mutliple_steps_dic_small_model_Mnist.keys()),list(SR_deepfool_mutliple_steps_dic_small_model_Mnist.values()),label='Deepfool multiple steps')
+ax[2][1].plot(list(SR_FGSM_dic_small_model_Mnist.keys()),list(SR_FGSM_dic_small_model_Mnist.values()),label='FGSM')
+ax[2][1].plot(list(SR_blackbox_dic_small_model_Mnist.values()),[1 for i in range(len(SR_blackbox_dic_small_model_Mnist))],label='boundary_attack')
+ax[2][1].grid(True,which="both", linestyle='--')
+ax[2][1].set_title('Successs rate for different degrees of change \n on Mnist images for the small model',fontsize=11)
+ax[2][1].set_xlabel('DOC (%)')
+ax[2][1].set_ylabel('SR')
+ax[2][1].legend(loc='lower right')
+ax[2][1].set_xlim(x_min,x_max)
+ax[2][1].set_ylim(y_min,y_max)
+
+
+ax[2][2].plot(list(SR_deepfool_1step_dic_model_effnet_Mnist.keys()),list(SR_deepfool_1step_dic_model_effnet_Mnist.values()),label='deepfool 1 step')
+ax[2][2].plot(list(SR_deepfool_mutliple_steps_dic_model_effnet_Mnist.keys()),list(SR_deepfool_mutliple_steps_dic_model_effnet_Mnist.values()),label='Deepfool multiple steps')
+ax[2][2].plot(list(SR_FGSM_dic_model_effnet_Mnist.keys()),list(SR_FGSM_dic_model_effnet_Mnist.values()),label='FGSM')
+ax[2][2].plot(list(SR_blackbox_dic_model_effnet_Mnist.values()),[1 for i in range(len(SR_blackbox_dic_model_effnet_Mnist))],label='boundary_attack')
+ax[2][2].grid(True,which="both", linestyle='--')
+ax[2][2].set_title('Successs rate for different degrees of change \n on Mnist images for the effnet model',fontsize=11)
+ax[2][2].set_xlabel('DOC (%)')
+ax[2][2].set_ylabel('SR')
+ax[2][2].legend(loc='lower right')
+ax[2][2].set_xlim(x_min,x_max)
+ax[2][2].set_ylim(y_min,y_max)
+
+
+
+
+fig.subplots_adjust(hspace=0.5,bottom=0.1)
+plt.show()
+```

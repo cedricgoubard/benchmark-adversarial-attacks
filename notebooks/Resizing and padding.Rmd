@@ -1,0 +1,206 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.4.1
+  kernelspec:
+    display_name: BENCHMARK
+    language: python
+    name: benchmark
+---
+
+# Resizing and padding
+
+```{python}
+# %load_ext autoreload
+# %autoreload 2
+# %load_ext tensorboard
+```
+
+```{python}
+import os
+from os.path import join,exists
+from tensorboard import program
+import datetime
+import numpy as np
+import pandas as pd
+import cv2
+import pickle
+from tqdm import tqdm
+from PIL import Image
+from random import randint
+import matplotlib.pyplot as plt
+
+import tensorflow as tf
+import tensorflow.keras.backend as K
+
+
+from adv_benchmark.config import Config
+from adv_benchmark.models_training import pick_data_set,train_and_save_effnet,train_and_save_small_model
+from adv_benchmark.white_box_attacks import three_attacks_runner,attack_runner
+from adv_benchmark.black_box_attacks import boundary_attack_run,gif_maker
+from adv_benchmark.random_padding import create_model_with_defense
+
+gpus = tf.config.experimental.list_physical_devices('GPU')
+tf.config.experimental.set_virtual_device_configuration(
+    gpus[0],
+    [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4*1024)]
+)
+
+tf.config.run_functions_eagerly(True)
+```
+
+### Vizualisation of the padding
+
+```{python}
+# model_with_def=create_model_with_defense('Mnist')
+# (X_train,X_test,y_train,y_test)=pick_data_set('Mnist')
+# desiredOutputs = model_with_def.layers[0].output
+# newModel = Model(model_with_def.inputs, desiredOutputs)
+
+# plt.figure(figsize=(25,25))
+# for i,image in enumerate(X_test[:9]): 
+#     ax = plt.subplot(3, 3, i + 1)
+#     plt.imshow(np.squeeze(newModel.predict(np.expand_dims(X_test[i],axis=0))).astype('int32'))
+#     plt.axis("off")
+
+```
+
+##  4. Defense against white box attacks
+
+```{python}
+def run_white_boxes(data_set_name):
+    (X_train,X_test,y_train,y_test)=pick_data_set(data_set_name)
+    print('====training model without padding====')
+    model_effnet=train_and_save_effnet(data_set_name)
+    print('====training model with padding====')
+    model_with_def=create_model_with_defense(data_set_name)
+    
+    model_without_def=model_effnet 
+    
+    
+    if exists(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_'+str(data_set_name))==False:
+        print('====attacks on model with padding====')
+        SR_FGSM_dic_with_defense,_=attack_runner(model_with_def,model_with_def,X_test[:100], y_test[:100], [0.1,1,5,10,25,50,75,100])
+        
+        print('====attacks on model without padding====')
+        SR_FGSM_dic_without_defense,_=attack_runner(model_without_def,model_without_def,X_test[:100], y_test[:100], [0.1,1,5,10,25,50,75,100])
+        with open(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_'+str(data_set_name), 'wb') as f:
+            pickle.Pickler(f).dump(SR_FGSM_dic_with_defense)
+            pickle.Pickler(f).dump(SR_FGSM_dic_without_defense)
+    else:
+         with open(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_'+str(data_set_name), 'rb') as f:
+            SR_FGSM_dic_with_defense=pickle.Unpickler(f).load()
+            SR_FGSM_dic_without_defense=pickle.Unpickler(f).load()
+            
+    return(SR_FGSM_dic_without_defense,SR_FGSM_dic_with_defense)
+            
+```
+
+```{python}
+SR_FGSM_dic_without_defense,SR_FGSM_dic_with_defense=run_white_boxes('Mnist')
+```
+
+```{python}
+plt.plot(list(SR_FGSM_dic_with_defense.keys()),list(SR_FGSM_dic_with_defense.values()),label='with random padding')
+plt.plot(list(SR_FGSM_dic_without_defense.keys()),list(SR_FGSM_dic_without_defense.values()),label='without random padding')
+plt.grid(True,which="both", linestyle='--')
+plt.title('Successs rate for different degrees of change \n on Mnist images for the effnet model',fontsize=11)
+plt.xlabel('DOC (%)')
+plt.ylabel('SR')
+plt.legend(loc='lower right')
+```
+
+```{python}
+SR_FGSM_dic_without_defense,SR_FGSM_dic_with_defense=run_white_boxes('Cifar')
+```
+
+```{python}
+plt.plot(list(SR_FGSM_dic_with_defense.keys()),list(SR_FGSM_dic_with_defense.values()),label='with random padding')
+plt.plot(list(SR_FGSM_dic_without_defense.keys()),list(SR_FGSM_dic_without_defense.values()),label='without random padding')
+plt.grid(True,which="both", linestyle='--')
+plt.title('Successs rate for different degrees of change \n on Cifar images for the effnet model',fontsize=11)
+plt.xlabel('DOC (%)')
+plt.ylabel('SR')
+plt.legend(loc='lower right')
+```
+
+##  5. Defense against black box attacks
+
+
+#### Mnist
+
+```{python}
+(X_train,X_test,y_train,y_test)=pick_data_set('Mnist')
+print('====training model without padding====')
+model_without_defense=train_and_save_effnet('Mnist')
+print('====training model with padding====')
+model_with_defense=create_model_with_defense('Mnist')
+```
+
+```{python}
+data_set_name='Mnist'
+if exists(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name))==False:
+    degree_of_change_without_defense=boundary_attack_run(model_without_defense,X_test[1])
+    degree_of_change_with_defense=boundary_attack_run(model_with_defense,X_test[1])
+    with open(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name), 'wb') as f:
+        pickle.Pickler(f).dump(degree_of_change_without_defense)
+        pickle.Pickler(f).dump(degree_of_change_with_defense)
+else:
+    with open(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name), 'rb') as f:
+        degree_of_change_without_defense=pickle.Unpickler(f).load()
+        degree_of_change_with_defense=pickle.Unpickler(f).load()
+
+```
+
+```{python}
+plt.plot(list(degree_of_change_without_defense.keys()),list(degree_of_change_without_defense.values()),label='DOC without random padding')
+plt.plot(list(degree_of_change_with_defense.keys()),list(degree_of_change_with_defense.values()),label='DOC with random padding')
+plt.grid(True,which="both", linestyle='--')
+plt.title('DOC of the adversarial image with respect to the number of iterations on EfficientNet on Mnist', fontsize=8)
+plt.xlabel('Iterarion')
+plt.ylabel('DOC (%)')
+
+plt.legend(loc='upper right')
+plt.show()
+```
+
+#### Cifar
+
+```{python}
+(X_train,X_test,y_train,y_test)=pick_data_set('Cifar')
+print('====training model without padding====')
+model_without_defense=train_and_save_effnet('Cifar')
+print('====training model with padding====')
+model_with_defense=create_model_with_defense('Cifar')
+```
+
+```{python}
+data_set_name='Cifar'
+if exists(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name))==False:
+    degree_of_change_without_defense=boundary_attack_run(model_without_defense,X_test[1])
+    degree_of_change_with_defense=boundary_attack_run(model_with_defense,X_test[1])
+    with open(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name), 'wb') as f:
+        pickle.Pickler(f).dump(degree_of_change_without_defense)
+        pickle.Pickler(f).dump(degree_of_change_with_defense)
+else:
+    with open(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name), 'rb') as f:
+        degree_of_change_without_defense=pickle.Unpickler(f).load()
+        degree_of_change_with_defense=pickle.Unpickler(f).load()
+```
+
+```{python}
+plt.plot(list(degree_of_change_without_defense.keys()),list(degree_of_change_without_defense.values()),label='DOC without random padding')
+plt.plot(list(degree_of_change_with_defense.keys()),list(degree_of_change_with_defense.values()),label='DOC with random padding')
+plt.grid(True,which="both", linestyle='--')
+plt.title('DOC of the adversarial image with respect to the number of iterations on EfficientNet on Cifar', fontsize=8)
+plt.xlabel('Iterarion')
+plt.ylabel('DOC (%)')
+
+plt.legend(loc='upper right')
+plt.show()
+```

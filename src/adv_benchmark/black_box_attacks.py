@@ -83,7 +83,7 @@ def boundary_attack_run(model_to_attack,target_image,iterations=100):
     return(degree_of_change)
 
 def gif_maker(path,image_list,gif_pictures_size=200,duration=40):
-     '''
+    '''
     This fonction creates a gif from an image list
     inputs:
     -path: path where the gif will be saved

@@ -1,0 +1,265 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.4.1
+  kernelspec:
+    display_name: BENCHMARK
+    language: python
+    name: benchmark
+---
+
+#  Adversarial training
+
+
+```{python}
+# %load_ext autoreload
+# %autoreload 2
+```
+
+```{python}
+import os
+from os.path import join,exists
+
+import time 
+import numpy as np
+import pandas as pd
+import cv2
+import pickle
+from tqdm import tqdm
+from PIL import Image
+import matplotlib.pyplot as plt
+import copy
+
+import tensorflow as tf
+from tensorflow import convert_to_tensor
+import tensorflow.keras.backend as K
+from tensorflow.keras.models import  load_model,Model
+
+from foolbox.attacks import LinfFastGradientAttack,LinfDeepFoolAttack
+
+from adv_benchmark.config import Config
+from adv_benchmark.models_training import pick_data_set,train_and_save_effnet,train_and_save_small_model
+from adv_benchmark.white_box_attacks import three_attacks_runner
+from adv_benchmark.black_box_attacks import boundary_attack_run
+from adv_benchmark.adversarial_training import train_models
+
+gpus = tf.config.experimental.list_physical_devices('GPU')
+tf.config.experimental.set_virtual_device_configuration(
+    gpus[0],
+    [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4*1024)]
+)
+
+tf.config.run_functions_eagerly(False)
+tf.random.set_seed(0)
+```
+
+#### 2. Load models
+
+
+On défini une classe qui créé des modèles dont la fonction objectif est une combinaison de deux fonction objectifs. La première est une cross-entropie classique et la seconde est une cross-entropie adverse. C'est à dire une fonction qui vise à correctement classifier un exemple adverse 
+
+
+$$J_{tot}(\theta,x,y)=(1-c)J(\theta,x,y)+cJ(\theta,(x+{\epsilon}sign(\nabla_{x}J(\theta,x,y)),y)$$ 
+
+```{python}
+def attacks(data_set_list=['Mnist','Cifar']):
+    data_set_plots={}
+    model=train_models()
+    for data_set_name in data_set_list:
+        (_,X_test,_,y_test)=pick_data_set(data_set_name)        
+        plots={}
+        epsilons=[0.1,1,5,10,25,50,75,100]
+        X=X_test[7000:7100]
+        y=y_test[7000:7100]
+        for c in [0,0.1,0.3,0.5,0.7,0.9]:
+            print("======= attack: data_set: "+str(data_set_name)+' c:'+str(c)+'======')
+            model.load_weights(Config.MODELS_PATH+'/adversarial_training/'+str(data_set_name)+'/c='+str(c)+'.h5')
+            if exists(Config.DATA_PATH+'efficiency_adv_trained/'+str(data_set_name)+'/c='+str(c))==False:
+                plots[c],_=attack_runner(model,model,X, y, epsilons)
+                with open(Config.DATA_PATH+'efficiency_adv_trained/'+str(data_set_name)+'/c='+str(c), 'wb') as f:
+                        pickle.Pickler(f).dump(plots[c])
+
+            else:
+                with open(Config.DATA_PATH+'efficiency_adv_trained/'+str(data_set_name)+'/c='+str(c), 'rb') as f:
+                    plots[c]=pickle.Unpickler(f).load()
+        data_set_plots[data_set_name]=plots
+    return(data_set_plots)
+        
+    
+```
+
+```{python}
+data_set_plots=attacks(data_set_list=['Mnist','Cifar'])
+```
+
+```{python}
+for c,plot in data_set_plots['Mnist'].items():
+    plt.plot(list(plot.keys()),list(plot.values()),label='c='+str(c))
+plt.grid(True,which="both", linestyle='--')
+plt.title('Successs rate for different degrees of change \n on Mnist images',fontsize=11)
+plt.xlabel('DOC (%)')
+plt.ylabel('SR')
+plt.legend(loc='upper left')
+```
+
+```{python}
+for c,plot in data_set_plots['Cifar'].items():
+    plt.plot(list(plot.keys()),list(plot.values()),label='c='+str(c))
+plt.grid(True,which="both", linestyle='--')
+plt.title('Successs rate for different degrees of change \n on Cifar images',fontsize=11)
+plt.xlabel('DOC (%)')
+plt.ylabel('SR')
+plt.legend(loc='lower right')
+```
+
+Clearly the adversarial training has decreased the efficiency of the attacks so it is truly beneficial. It seems that the higher c is and the better the protection
+
+
+Let's save the 'best model' --> c=0.9
+
+
+### Softmax probabilities visualizations
+
+
+At first let's create some adversarial examples that will fool the most basic model
+
+```{python}
+model=train_models()
+```
+
+```{python}
+model.load_weights(Config.MODELS_PATH+'/adversarial_training/Cifar/c=0.h5')
+(_,X_test,_,y_test)=pick_data_set('Cifar')
+model_to_attack=TensorFlowModel(model , bounds=(0, 255))
+attack=LinfFastGradientAttack()
+image_list=X_test[:100]
+labels=list(map(np.argmax,y_test[:100]))
+adv_list=[]
+true_label=[]
+for i,image in enumerate(tqdm(image_list,position=0)):
+    image = np.asarray(image)[:,:,:3].astype('float32')
+    image = convert_to_tensor(np.expand_dims(image,axis=0))
+    label=labels[i]
+    label = tf.convert_to_tensor(np.array([label]))
+    _, clipped, is_adv = attack(model_to_attack,image,label,epsilons=5)
+    if bool(is_adv[0])==True:
+        adv_list.append(np.array(clipped[0]))
+        true_label.append(labels[i])
+    
+```
+
+Let's visualize the outputs of the softmax layers of the different models when given the adversarial images 
+
+```{python}
+adv_image_num=9
+
+plt.figure(figsize=(10,10))
+ax = plt.subplot(3, 3, 2)
+plt.imshow(adv_list[adv_image_num].astype('int32'))
+for i,c in enumerate([0,0.1,0.3,0.5,0.7,0.9]): 
+    model.load_weights(Config.MODELS_PATH+'adversarial_training/Cifar/c='+str(c)+'.h5')
+    ax = plt.subplot(3, 3, 3+i + 1)
+    color=['blue' for i in range(10)]
+    prediction=model.predict(np.expand_dims(adv_list[adv_image_num],axis=0))[0]
+    if np.argmax(prediction)==true_label[adv_image_num]:
+        color[true_label[adv_image_num]]='green'
+    else:
+        color[np.argmax(prediction)]='red'
+    plt.bar(x=[i for i in range(10)], height=prediction,color=color)
+    plt.title('c: '+str(c))
+
+```
+
+```{python}
+adv_image_num=2
+
+
+plt.figure(figsize=(10,10))
+ax = plt.subplot(3, 3, 2)
+plt.imshow(adv_list[adv_image_num].astype('int32'))
+for i,c in enumerate([0,0.1,0.3,0.5,0.7,0.9]):
+    model.load_weights(Config.MODELS_PATH+'adversarial_training/Cifar/c='+str(c)+'.h5')
+    ax = plt.subplot(3, 3, 3+i + 1)
+    color=['blue' for i in range(10)]
+    prediction=model.predict(np.expand_dims(adv_list[adv_image_num],axis=0))[0]
+    if np.argmax(prediction)==true_label[adv_image_num]:
+        color[true_label[adv_image_num]]='green'
+    else:
+        color[np.argmax(prediction)]='red'
+    plt.bar(x=[i for i in range(10)], height=prediction,color=color)
+    plt.title('c: '+str(c))
+```
+
+### Against a black box attack (boundary attack)
+
+```{python}
+model=train_models()
+```
+
+#### Mnist
+
+```{python}
+data_set_name='Mnist'
+(_,X_test,_,y_test)=pick_data_set(data_set_name)        
+if exists(Config.DATA_PATH+'efficiency_adv_trained/black_box'+str(data_set_name))==False:
+        model.load_weights(Config.MODELS_PATH+'adversarial_training/Mnist/c=0.h5')
+        degree_of_change_without_defense=boundary_attack_run(model,X_test[1])
+        model.load_weights(Config.MODELS_PATH+'adversarial_training/Mnist/c=0.9.h5')
+        degree_of_change_with_defense=boundary_attack_run(model,X_test[1])
+        with open(Config.DATA_PATH+'adversarial_training/black_box'+str(data_set_name), 'wb') as f:
+            pickle.Pickler(f).dump(degree_of_change_without_defense)
+            pickle.Pickler(f).dump(degree_of_change_with_defense)
+else:
+    with open(Config.DATA_PATH+'efficiency_adv_trained/black_box'+str(data_set_name), 'rb') as f:
+        degree_of_change_without_defense=pickle.Unpickler(f).load()
+        degree_of_change_with_defense=pickle.Unpickler(f).load()
+
+```
+
+```{python}
+plt.plot(list(degree_of_change_without_defense.keys()),list(degree_of_change_without_defense.values()),label='DOC without adversarial training')
+plt.plot(list(degree_of_change_with_defense.keys()),list(degree_of_change_with_defense.values()),label='DOC with adversarial training')
+plt.grid(True,which="both", linestyle='--')
+plt.title('DOC of the adversarial image with respect to the number of iterations on Mnist', fontsize=8)
+plt.xlabel('Iterarion')
+plt.ylabel('DOC (%)')
+
+plt.legend(loc='upper right')
+plt.show()
+```
+
+#### Cifar
+
+```{python}
+data_set_name='Cifar'
+(_,X_test,_,y_test)=pick_data_set(data_set_name)        
+if exists(Config.DATA_PATH+'efficiency_adv_trained/black_box'+str(data_set_name))==False:
+        model.load_weights(Config.MODELS_PATH+'adversarial_training/Cifar/c=0.h5')
+        degree_of_change_without_defense=boundary_attack_run(model,X_test[1])
+        model.load_weights(Config.MODELS_PATH+'adversarial_training/Cifar/c=0.9.h5')
+        degree_of_change_with_defense=boundary_attack_run(model,X_test[1])
+        with open(Config.DATA_PATH+'efficiency_adv_trained/black_box'+str(data_set_name), 'wb') as f:
+            pickle.Pickler(f).dump(degree_of_change_without_defense)
+            pickle.Pickler(f).dump(degree_of_change_with_defense)
+else:
+    with open(Config.DATA_PATH+'efficiency_adv_trained/black_box'+str(data_set_name), 'rb') as f:
+        degree_of_change_without_defense=pickle.Unpickler(f).load()
+        degree_of_change_with_defense=pickle.Unpickler(f).load()
+```
+
+```{python}
+plt.plot(list(degree_of_change_without_defense.keys()),list(degree_of_change_without_defense.values()),label='DOC without adversarial training')
+plt.plot(list(degree_of_change_with_defense.keys()),list(degree_of_change_with_defense.values()),label='DOC with adversarial training')
+plt.grid(True,which="both", linestyle='--')
+plt.title('DOC of the adversarial image with respect to the number of iterations on Cifar', fontsize=8)
+plt.xlabel('Iterarion')
+plt.ylabel('DOC (%)')
+
+plt.legend(loc='upper right')
+plt.show()
+```
