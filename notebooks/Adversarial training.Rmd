@@ -41,6 +41,7 @@ import tensorflow.keras.backend as K
 from tensorflow.keras.models import  load_model,Model
 
 from foolbox.attacks import LinfFastGradientAttack,LinfDeepFoolAttack
+from foolbox.models import TensorFlowModel
 
 from adv_benchmark.config import Config
 from adv_benchmark.models_training import pick_data_set,train_and_save_effnet,train_and_save_small_model
