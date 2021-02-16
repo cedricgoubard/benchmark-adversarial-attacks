@@ -2,15 +2,10 @@ venv/
 notebooks/.ipynb_checkpoints/
 *.egg-info
 .vscode/
-data/
 *.gif
 logs/
-data/
-models/
 *.pyc 
 adv_benchmark.egg-info/
 *.ipynb
 
 
-notebooks/Denoiser.ipynb
-notebooks/Etude de l'influence de paramètres sur l'efficacité d'attaques.ipynb
