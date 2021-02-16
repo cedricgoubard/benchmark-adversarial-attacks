@@ -37,7 +37,7 @@ import matplotlib.pyplot as plt
 
 import tensorflow as tf
 import tensorflow.keras.backend as K
-
+from tensorflow.keras.models import  Model
 
 from adv_benchmark.config import Config
 from adv_benchmark.models_training import pick_data_set,train_and_save_effnet,train_and_save_small_model
@@ -54,23 +54,23 @@ tf.config.experimental.set_virtual_device_configuration(
 tf.config.run_functions_eagerly(True)
 ```
 
-### Vizualisation of the padding
+## Vizualisation of the padding
 
 ```{python}
-# model_with_def=create_model_with_defense('Mnist')
-# (X_train,X_test,y_train,y_test)=pick_data_set('Mnist')
-# desiredOutputs = model_with_def.layers[0].output
-# newModel = Model(model_with_def.inputs, desiredOutputs)
+model_with_def=create_model_with_defense('Mnist')
+(X_train,X_test,y_train,y_test)=pick_data_set('Mnist')
+desiredOutputs = model_with_def.layers[0].output
+newModel = Model(model_with_def.inputs, desiredOutputs)
 
-# plt.figure(figsize=(25,25))
-# for i,image in enumerate(X_test[:9]): 
-#     ax = plt.subplot(3, 3, i + 1)
-#     plt.imshow(np.squeeze(newModel.predict(np.expand_dims(X_test[i],axis=0))).astype('int32'))
-#     plt.axis("off")
+plt.figure(figsize=(25,25))
+for i,image in enumerate(X_test[:9]): 
+    ax = plt.subplot(3, 3, i + 1)
+    plt.imshow(np.squeeze(newModel.predict(np.expand_dims(X_test[i],axis=0))).astype('int32'))
+    plt.axis("off")
 
 ```
 
-##  4. Defense against white box attacks
+##  Defense against white box attacks
 
 ```{python}
 def run_white_boxes(data_set_name):
@@ -101,6 +101,8 @@ def run_white_boxes(data_set_name):
             
 ```
 
+### Mnist
+
 ```{python}
 SR_FGSM_dic_without_defense,SR_FGSM_dic_with_defense=run_white_boxes('Mnist')
 ```
@@ -114,6 +116,8 @@ plt.xlabel('DOC (%)')
 plt.ylabel('SR')
 plt.legend(loc='lower right')
 ```
+
+### Cifar
 
 ```{python}
 SR_FGSM_dic_without_defense,SR_FGSM_dic_with_defense=run_white_boxes('Cifar')

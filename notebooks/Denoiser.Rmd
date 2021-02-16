@@ -57,10 +57,7 @@ tf.config.experimental.set_virtual_device_configuration(
 )
 ```
 
-### 6. Attack robusteness
-
-
-##### White box attack
+###  Test of the denoiser againt white box attackw (FGSM)
 
 ```{python}
 def total_run(data_set_name):
@@ -201,6 +198,8 @@ plt.show()
 ```{python}
 dict_classes=Config.CIFAR_CLASSES
 ```
+
+#### Let's visualize the effects of the denoiser on some images (adversarial and not adversarial)
 
 ```{python}
 plt.figure(figsize=(25,45))

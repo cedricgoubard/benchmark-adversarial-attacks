@@ -53,7 +53,7 @@ small_model=train_and_save_small_model('Mnist')
 ### Jacobian based saliency map
 
 
-After 35 minutes working, JSMA had'nt even produced a single adversarial image for efficient net. Let's try on a smaller CNN
+After 35 minutes working, JSMA had'nt even produced a single adversarial image for efficient net. Let's try on a small CNN (it takes around 4 minutes to produce one image)
 
 ```{python}
 (X_train,X_test,y_train,y_test)=pick_data_set('Mnist')

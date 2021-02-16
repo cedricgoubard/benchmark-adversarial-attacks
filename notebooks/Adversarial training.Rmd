@@ -59,13 +59,13 @@ tf.config.run_functions_eagerly(False)
 tf.random.set_seed(0)
 ```
 
-#### 2. Load models
-
-
 On défini une classe qui créé des modèles dont la fonction objectif est une combinaison de deux fonction objectifs. La première est une cross-entropie classique et la seconde est une cross-entropie adverse. C'est à dire une fonction qui vise à correctement classifier un exemple adverse 
 
 
 $$J_{tot}(\theta,x,y)=(1-c)J(\theta,x,y)+cJ(\theta,(x+{\epsilon}sign(\nabla_{x}J(\theta,x,y)),y)$$ 
+
+
+#### 2. Train models and launch white box attacks
 
 ```{python}
 def attacks(data_set_list=['Mnist','Cifar']):

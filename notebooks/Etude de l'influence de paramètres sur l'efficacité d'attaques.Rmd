@@ -60,7 +60,7 @@ Nous avons choisi d'étudier différent scénario pour lequel nous allons tracer
 - **2 jeux de données (Mnist et Cifar)**
 
 
-#### Mnist
+#### Models performances on Mnist and Cifar
 
 ```{python}
 name='Mnist'
@@ -109,6 +109,8 @@ print('performances of efficientNet on '+str(name))
 print('-------------------------')
 print(classification_small_model)
 ```
+
+### Let's launch some white box attacks on those models
 
 ```{python}
 epsilon_list=[0.1,1,5,10,25,50,75,100]
