@@ -22,31 +22,19 @@ jupyter:
 ```
 
 ```{python}
-import os
-from os.path import join,exists
+from os.path import exists
 
-import time 
 import numpy as np
-import pandas as pd
-import cv2
 import pickle
 from tqdm import tqdm
-from PIL import Image
 import matplotlib.pyplot as plt
-import copy
-
 import tensorflow as tf
 from tensorflow import convert_to_tensor
-import tensorflow.keras.backend as K
-from tensorflow.keras.models import  load_model,Model
-
-from foolbox.attacks import LinfFastGradientAttack,LinfDeepFoolAttack
+from foolbox.attacks import LinfFastGradientAttack #,LinfDeepFoolAttack
 from foolbox.models import TensorFlowModel
 
-from adv_benchmark.config import Config
-from adv_benchmark.models_training import pick_data_set,train_and_save_effnet,train_and_save_small_model
-from adv_benchmark.white_box_attacks import three_attacks_runner
-from adv_benchmark.black_box_attacks import boundary_attack_run
+from adv_benchmark.config import get_cfg, load_cfg
+from adv_benchmark.models_training import pick_data_set
 from adv_benchmark.adversarial_training import train_models
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
@@ -59,10 +47,12 @@ tf.config.run_functions_eagerly(False)
 tf.random.set_seed(0)
 ```
 
-On défini une classe qui créé des modèles dont la fonction objectif est une combinaison de deux fonction objectifs. La première est une cross-entropie classique et la seconde est une cross-entropie adverse. C'est à dire une fonction qui vise à correctement classifier un exemple adverse 
+In this defence strategy, we customize the model's objective function to combine 2 aspects:
+ - a regular cross-entropy
+ - an "adversarial cross-entropy", i.e. a function rewarding the correct classification of an adversarial example
 
 
-$$J_{tot}(\theta,x,y)=(1-c)J(\theta,x,y)+cJ(\theta,(x+{\epsilon}sign(\nabla_{x}J(\theta,x,y)),y)$$ 
+$$J_{tot}(\theta,x,y)=(1-c)J(\theta,x,y)+cJ(\theta,(x+{\epsilon}sign(\nabla_{x}J(\theta,x,y)),y)$$
 
 
 #### 2. Train models and launch white box attacks
@@ -90,8 +80,8 @@ def attacks(data_set_list=['Mnist','Cifar']):
                     plots[c]=pickle.Unpickler(f).load()
         data_set_plots[data_set_name]=plots
     return(data_set_plots)
-        
-    
+
+
 ```
 
 ```{python}
@@ -118,8 +108,7 @@ plt.ylabel('SR')
 plt.legend(loc='lower right')
 ```
 
-Clearly the adversarial training has decreased the efficiency of the attacks so it is truly beneficial. It seems that the higher c is and the better the protection
-
+The adversarial training has indeed decreased the efficiency of the attack. It seems that the higher c is, the better the protection against attacks.
 
 Let's save the 'best model' --> c=0.9
 
@@ -127,7 +116,7 @@ Let's save the 'best model' --> c=0.9
 ### Softmax probabilities visualizations
 
 
-At first let's create some adversarial examples that will fool the most basic model
+Let's now create some adversarial examples that will fool the most basic model.
 
 ```{python}
 model=train_models()
@@ -151,10 +140,10 @@ for i,image in enumerate(tqdm(image_list,position=0)):
     if bool(is_adv[0])==True:
         adv_list.append(np.array(clipped[0]))
         true_label.append(labels[i])
-    
+
 ```
 
-Let's visualize the outputs of the softmax layers of the different models when given the adversarial images 
+Let's visualize the outputs of the softmax layers of the different models when given the adversarial images
 
 ```{python}
 adv_image_num=9
