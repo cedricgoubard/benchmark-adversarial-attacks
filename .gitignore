@@ -1,11 +1,13 @@
 venv/
-notebooks/.ipynb_checkpoints/
+**/.ipynb_checkpoints/**
+**/__pycache__/**
 *.egg-info
 .vscode/
 *.gif
 logs/
-*.pyc 
+*.pyc
 adv_benchmark.egg-info/
 *.ipynb
 
-
+# Conf files
+config.yaml
