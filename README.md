@@ -18,5 +18,10 @@ cd benchmark-adversarial-attacks
 make install
 ```
 
+Once everything is installed, you need to create you configuration file. You can copy `config.yaml.example` and simply replace the defaut values with your own. 
+```bash
+cp config.yaml.example config.yaml
+```
+
 You are now ready to open any notebooks from the `notebooks` folder.
 
