@@ -13,7 +13,7 @@ You can then run the following commands:
 
 ```bash
 # sudo apt-get install build-essential  # to install GNU Make if necessary
-git clone [repo address]
+git clone https://github.com/cedricgoubard/benchmark-adversarial-attacks.git
 cd benchmark-adversarial-attacks
 make install
 ```
