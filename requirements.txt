@@ -2,6 +2,7 @@ adversarial-robustness-toolbox==1.5.1
 art==5.1
 cached-property==1.5.2
 cachetools==4.0.0
+efficientnet
 foolbox==3.2.1
 graphviz==0.16
 ipykernel==5.1.1
@@ -38,6 +39,7 @@ pandas==0.24.2
 Pillow==5.1.0
 pip-autoremove==0.9.1
 plotly==3.10.0
+python-box==5.3.0
 scikit-image==0.17.2
 scikit-learn==0.23.2
 scipy==1.4.1
