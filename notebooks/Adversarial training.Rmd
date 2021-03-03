@@ -22,20 +22,21 @@ jupyter:
 ```
 
 ```{python}
+import pickle
 from os.path import exists
 
 import numpy as np
-import pickle
-from tqdm import tqdm
-import matplotlib.pyplot as plt
 import tensorflow as tf
-from tensorflow import convert_to_tensor
-from foolbox.attacks import LinfFastGradientAttack #,LinfDeepFoolAttack
+from foolbox.attacks import LinfFastGradientAttack
 from foolbox.models import TensorFlowModel
+from matplotlib import pyplot as plt
+from tensorflow import convert_to_tensor
+from tqdm import tqdm
 
+from adv_benchmark.adversarial_training import train_models
 from adv_benchmark.config import get_cfg, load_cfg
 from adv_benchmark.models_training import pick_data_set
-from adv_benchmark.adversarial_training import train_models
+
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 tf.config.experimental.set_virtual_device_configuration(

@@ -1,44 +1,24 @@
-'''
-Module for implementing the adversarial training defense strategy 
-'''
+"""
+Module for implementing the adversarial training defense strategy
+"""
+from os.path import exists, join
+import time
+import itertools
 
-import os
-from os.path import join,exists
-
-
-import numpy as np
-import pandas as pd
-import cv2
-import pickle
 from tqdm import tqdm
-from PIL import Image
-import matplotlib.pyplot as plt
-
 import tensorflow as tf
-
-from tensorflow import convert_to_tensor
-import tensorflow.keras.backend as K
-from tensorflow.keras.models import  load_model,Model
-from tensorflow.keras import applications
-from tensorflow.keras.layers import Dropout, Activation, Dense, GlobalMaxPooling2D,Conv2D,Flatten,MaxPooling2D,InputLayer
-from tensorflow.keras.utils import to_categorical
-
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import (
+    Dropout,
+    Activation,
+    Dense,
+    GlobalMaxPooling2D,
+)
 from efficientnet.tfkeras import EfficientNetB7
-from tensorflow.keras import datasets
-from foolbox.attacks import LinfFastGradientAttack,LinfDeepFoolAttack
-from foolbox.distances import LpDistance
-from foolbox.models import TensorFlowModel
-from foolbox import criteria
-from sklearn.metrics import classification_report,plot_roc_curve
 
-from art.attacks.evasion import SaliencyMapMethod
-from art.estimators.classification import TensorFlowV2Classifier
-from art.attacks.evasion import BoundaryAttack
-from art.utils import load_dataset #to play with cifar images
-
-from adv_benchmark.config import Config
+from adv_benchmark.config import get_cfg
+from adv_benchmark.utils import compute_acc
 from adv_benchmark.models_training import pick_data_set
-from adv_benchmark.metrics import DOC,succes_rate
 
 
 class NewModel(tf.keras.Model):

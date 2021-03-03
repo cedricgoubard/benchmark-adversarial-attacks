@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ---
 jupyter:
   jupytext:
@@ -21,25 +22,23 @@ jupyter:
 ```
 
 ```{python}
-import os
-from os.path import join,exists
+import pickle
+from os.path import exists
 
 import numpy as np
-import pandas as pd
-import cv2
-import pickle
-from tqdm import tqdm
-from PIL import Image
-import matplotlib.pyplot as plt
-
 import tensorflow as tf
+from matplotlib import pyplot as plt
+from sklearn.metrics import classification_report
 
-from sklearn.metrics import classification_report,plot_roc_curve
-
-from adv_benchmark.config import Config
-from adv_benchmark.models_training import pick_data_set,train_and_save_effnet,train_and_save_small_model
-from adv_benchmark.white_box_attacks import three_attacks_runner
 from adv_benchmark.black_box_attacks import boundary_attack_run
+from adv_benchmark.config import get_cfg
+from adv_benchmark.models_training import (
+    pick_data_set,
+    train_and_save_effnet,
+    train_and_save_small_model,
+)
+from adv_benchmark.white_box_attacks import three_attacks_runner
+
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 tf.config.experimental.set_virtual_device_configuration(

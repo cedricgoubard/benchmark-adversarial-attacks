@@ -1,34 +1,25 @@
-'''
-Module training and saving models 
-'''
+"""
+Module training and saving models
+"""
+from os.path import exists
 
-import os
-from os.path import join,exists
-from tensorboard import program
-import datetime
 import numpy as np
-import pandas as pd
 import cv2
-import pickle
-from tqdm import tqdm
-from PIL import Image
-from random import randint
-import matplotlib.pyplot as plt
-
 import tensorflow as tf
-from tensorflow import convert_to_tensor
-import tensorflow.keras.backend as K
-from tensorflow.keras.models import  load_model,Model
-from tensorflow.keras import applications
-from tensorflow.keras.layers import Lambda,Input,Dropout, Activation, Dense, GlobalMaxPooling2D,Conv2D,Flatten,MaxPooling2D,InputLayer
+from tensorflow.keras.models import load_model, Model
+from tensorflow.keras.layers import (
+    Dropout,
+    Activation,
+    Dense,
+    GlobalMaxPooling2D,
+    Conv2D,
+    Flatten,
+    MaxPooling2D,
+)
+from tensorflow.keras import datasets
 from tensorflow.keras.utils import to_categorical
 from efficientnet.tfkeras import EfficientNetB7
-from tensorflow.keras import datasets
-from art.utils import load_dataset #to play with cifar images
-
-
-from adv_benchmark.config import Config
-
+from art.utils import load_dataset  # to play with cifar images
 
 
 

@@ -16,11 +16,12 @@ jupyter:
 # Visualisation of defense strategies effectiveness
 
 ```{python}
-from os.path import join,exists
-import numpy as np
 import pickle
+from os.path import exists, join
+
+import numpy as np
+from matplotlib import pyplot as plt
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 
 from adv_benchmark.config import Config
 ```

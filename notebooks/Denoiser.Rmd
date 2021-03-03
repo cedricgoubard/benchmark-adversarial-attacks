@@ -21,33 +21,20 @@ jupyter:
 ```
 
 ```{python}
-import os
-from os.path import join,exists
-
-import random
-import numpy as np
-import pandas as pd
-import cv2
 import pickle
-from tqdm import tqdm
-from PIL import Image
-import matplotlib.pyplot as plt
-import copy
+from os.path import exists
 
+import numpy as np
 import tensorflow as tf
-from tensorflow import convert_to_tensor
-import tensorflow.keras.backend as K
-from tensorflow.keras.models import  load_model,Model
-from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.layers import Conv2DTranspose, Reshape,Input,Dropout, Activation, Dense, GlobalMaxPooling2D,Conv2D,Flatten,MaxPooling2D,InputLayer
+from matplotlib import pyplot as plt
+from tensorflow.keras.layers import Input
+from tensorflow.keras.models import Model
 
-from adv_benchmark.config import Config
-from adv_benchmark.models_training import pick_data_set,train_and_save_effnet,train_and_save_small_model
-from adv_benchmark.white_box_attacks import three_attacks_runner,attack_runner
 from adv_benchmark.black_box_attacks import boundary_attack_run
-from adv_benchmark.adversarial_training import train_models
-from adv_benchmark.denoiser import Denoise,make_adv_data_set
-
+from adv_benchmark.config import get_cfg
+from adv_benchmark.denoiser import Denoise, make_adv_data_set
+from adv_benchmark.models_training import pick_data_set, train_and_save_effnet
+from adv_benchmark.white_box_attacks import attack_runner
 
 
 gpus = tf.config.experimental.list_physical_devices('GPU')

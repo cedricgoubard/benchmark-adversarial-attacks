@@ -21,23 +21,19 @@ jupyter:
 ```
 
 ```{python}
-import os
-from os.path import join
 
 import numpy as np
-import pandas as pd
-import cv2
-import pickle
-from tqdm import tqdm
-from PIL import Image
-import matplotlib.pyplot as plt
 import tensorflow as tf
-
 from art.attacks.evasion import SaliencyMapMethod
 from art.estimators.classification import TensorFlowV2Classifier
+from matplotlib import pyplot as plt
 
+from adv_benchmark.models_training import (
+    pick_data_set,
+    train_and_save_small_model,
+)
+from adv_benchmark.config import get_cfg
 
-from adv_benchmark.models_training import pick_data_set,train_and_save_effnet,train_and_save_small_model
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 tf.config.experimental.set_virtual_device_configuration(
