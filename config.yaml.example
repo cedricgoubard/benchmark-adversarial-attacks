@@ -1,7 +1,7 @@
 # Copy this file and remove the final .example
 
-MODELS_PATH: "/path/to/models"
-DATA_PATH: "/path/to/data"
-CIFAR_CLASSES: [
+MODELS_PATH: "/path/to/models"  # Path to the folder where you wish to save the trained models
+DATA_PATH: "/path/to/data"      # Path to the folder where you wish to save the results of the benchmark
+CIFAR_CLASSES: [                # You can leave this unchanged, or customize it is you wan
   "airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"
   ]
