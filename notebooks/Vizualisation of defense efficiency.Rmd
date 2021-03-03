@@ -23,7 +23,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 
-from adv_benchmark.config import Config
+from adv_benchmark.config import get_cfg
+cfg = get_cfg("../config.yaml")
 ```
 
 ## White box attacks
@@ -32,63 +33,63 @@ from adv_benchmark.config import Config
 ### Random padding
 
 ```{python}
- with open(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_Mnist', 'rb') as f:
-    SR_FGSM_dic_with_padding_Mnist=pickle.Unpickler(f).load()
-    SR_FGSM_dic_without_padding_Mnist=pickle.Unpickler(f).load()
-```
+ with open(cfg.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_Mnist', 'rb') as f:
+    SR_FGSM_dic_with_padding_Mnist = pickle.Unpickler(f).load()
+    SR_FGSM_dic_without_padding_Mnist = pickle.Unpickler(f).load()
 
-```{python}
- with open(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_Cifar', 'rb') as f:
-    SR_FGSM_dic_with_padding_Cifar=pickle.Unpickler(f).load()
-    SR_FGSM_dic_without_padding_Cifar=pickle.Unpickler(f).load()
+with open(cfg.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_Cifar', 'rb') as f:
+    SR_FGSM_dic_with_padding_Cifar = pickle.Unpickler(f).load()
+    SR_FGSM_dic_without_padding_Cifar = pickle.Unpickler(f).load()
 ```
 
 ### Adversarial training
 
 ```{python}
-plots_Mnist={}
-for c in [0,0.1,0.3,0.5,0.7,0.9]:
-    with open(Config.DATA_PATH+'efficiency_adv_trained/Mnist/c='+str(c), 'rb') as f:
-        plots_Mnist[c]=pickle.Unpickler(f).load()
+plots_Mnist = {}
+for c in [0, 0.1, 0.3, 0.5, 0.7, 0.9]:
+    with open(cfg.DATA_PATH+'efficiency_adv_trained/Mnist/c='+str(c), 'rb') as f:
+        plots_Mnist[c] = pickle.Unpickler(f).load()
 ```
 
 ```{python}
-plots_Cifar={}
-for c in [0,0.1,0.3,0.5,0.7,0.9]:
-    with open(Config.DATA_PATH+'efficiency_adv_trained/Cifar/c='+str(c), 'rb') as f:
-        plots_Cifar[c]=pickle.Unpickler(f).load()
+plots_Cifar = {}
+for c in [0, 0.1, 0.3, 0.5, 0.7, 0.9]:
+    with open(cfg.DATA_PATH+'efficiency_adv_trained/Cifar/c='+str(c), 'rb') as f:
+        plots_Cifar[c] = pickle.Unpickler(f).load()
 ```
 
 ### Denoiser
 
 ```{python}
-with open(Config.DATA_PATH+'efficiency_denoiser/denosier_efficiency_white_box_Mnist', 'rb') as f:
-    SR_FGSM_dic_without_denoiser_Mnist=pickle.Unpickler(f).load()
-    SR_FGSM_dic_with_denoiser_Mnist=pickle.Unpickler(f).load()
+with open(cfg.DATA_PATH+'efficiency_denoiser/denosier_efficiency_white_box_Mnist', 'rb') as f:
+    SR_FGSM_dic_without_denoiser_Mnist = pickle.Unpickler(f).load()
+    SR_FGSM_dic_with_denoiser_Mnist = pickle.Unpickler(f).load()
 ```
 
 ```{python}
-with open(Config.DATA_PATH+'efficiency_denoiser/denosier_efficiency_white_box_Cifar', 'rb') as f:
-    SR_FGSM_dic_without_denoiser_Cifar=pickle.Unpickler(f).load()
-    SR_FGSM_dic_with_denoiser_Cifar=pickle.Unpickler(f).load()
+with open(cfg.DATA_PATH+'efficiency_denoiser/denosier_efficiency_white_box_Cifar', 'rb') as f:
+    SR_FGSM_dic_without_denoiser_Cifar = pickle.Unpickler(f).load()
+    SR_FGSM_dic_with_denoiser_Cifar = pickle.Unpickler(f).load()
 ```
 
 ### Without defense
 
 ```{python}
-with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_Mnist', 'rb') as f:
-    SR_deepfool_1step_dic_model_effnet_Mnist=pickle.Unpickler(f).load()
-    SR_deepfool_mutliple_steps_dic_model_effnet_Mnist=pickle.Unpickler(f).load()
-    SR_FGSM_dic_model_effnet_Mnist=pickle.Unpickler(f).load()
-    SR_blackbox_dic_model_effnet_Mnist=pickle.Unpickler(f).load()
+with open(cfg.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_Mnist', 'rb') as f:
+    SR_deepfool_1step_dic_model_effnet_Mnist = pickle.Unpickler(f).load()
+    SR_deepfool_mutliple_steps_dic_model_effnet_Mnist = pickle.Unpickler(
+        f).load()
+    SR_FGSM_dic_model_effnet_Mnist = pickle.Unpickler(f).load()
+    SR_blackbox_dic_model_effnet_Mnist = pickle.Unpickler(f).load()
 ```
 
 ```{python}
-with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_Cifar', 'rb') as f:
-    SR_deepfool_1step_dic_model_effnet_Cifar=pickle.Unpickler(f).load()
-    SR_deepfool_mutliple_steps_dic_model_effnet_Cifar=pickle.Unpickler(f).load()
-    SR_FGSM_dic_model_effnet_Cifar=pickle.Unpickler(f).load()
-    SR_blackbox_dic_model_effnet_Cifar=pickle.Unpickler(f).load()
+with open(cfg.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_Cifar', 'rb') as f:
+    SR_deepfool_1step_dic_model_effnet_Cifar = pickle.Unpickler(f).load()
+    SR_deepfool_mutliple_steps_dic_model_effnet_Cifar = pickle.Unpickler(
+        f).load()
+    SR_FGSM_dic_model_effnet_Cifar = pickle.Unpickler(f).load()
+    SR_blackbox_dic_model_effnet_Cifar = pickle.Unpickler(f).load()
 ```
 
 ### Plot
@@ -165,43 +166,49 @@ plt.show()
 ### Random padding
 
 ```{python}
-with open(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_boxMnist', 'rb') as f:
-        degree_of_change_without_padding_black_box_Mnist=pickle.Unpickler(f).load()
-        degree_of_change_with_padding_black_box_Mnist=pickle.Unpickler(f).load()
+with open(cfg.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_boxMnist', 'rb') as f:
+        degree_of_change_without_padding_black_box_Mnist = pickle.Unpickler(
+            f).load()
+        degree_of_change_with_padding_black_box_Mnist = pickle.Unpickler(
+            f).load()
 ```
 
 ```{python}
-with open(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_boxCifar', 'rb') as f:
-        degree_of_change_without_padding_black_box_Cifar=pickle.Unpickler(f).load()
-        degree_of_change_with_padding_black_box_Cifar=pickle.Unpickler(f).load()
+with open(cfg.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_boxCifar', 'rb') as f:
+        degree_of_change_without_padding_black_box_Cifar = pickle.Unpickler(
+            f).load()
+        degree_of_change_with_padding_black_box_Cifar = pickle.Unpickler(
+            f).load()
 ```
 
 ### Adversarial training
 
 ```{python}
-with open(Config.DATA_PATH+'efficiency_adv_trained/black_boxMnist', 'rb') as f:
-    degree_of_change_without_adv_training_black_blox_Mnist=pickle.Unpickler(f).load()
-    degree_of_change_with_adv_training_black_blox_Mnist=pickle.Unpickler(f).load()
+with open(cfg.DATA_PATH+'efficiency_adv_trained/black_boxMnist', 'rb') as f:
+    degree_of_change_without_adv_training_black_blox_Mnist = pickle.Unpickler(
+        f).load()
+    degree_of_change_with_adv_training_black_blox_Mnist = pickle.Unpickler(
+        f).load()
 ```
 
 ```{python}
-with open(Config.DATA_PATH+'efficiency_adv_trained/black_boxCifar', 'rb') as f:
-    degree_of_change_without_adv_training_black_blox_Cifar=pickle.Unpickler(f).load()
-    degree_of_change_with_adv_training_black_blox_Cifar=pickle.Unpickler(f).load()
+with open(cfg.DATA_PATH+'efficiency_adv_trained/black_boxCifar', 'rb') as f:
+    degree_of_change_without_adv_training_black_blox_Cifar = pickle.Unpickler(
+        f).load()
+    degree_of_change_with_adv_training_black_blox_Cifar = pickle.Unpickler(
+        f).load()
 ```
 
 ### Denoiser
 
 ```{python}
- with open(Config.DATA_PATH+'efficiency_denoiser/denosier_efficiency_black_box_Mnist', 'rb') as f:
-        degree_of_change_without_denoiser_black_blox_Mnist=pickle.Unpickler(f).load()
-        degree_of_change_with_denoiser_black_blox_Mnist=pickle.Unpickler(f).load()
-```
-
-```{python}
- with open(Config.DATA_PATH+'efficiency_denoiser/denosier_efficiency_black_box_Cifar', 'rb') as f:
-        degree_of_change_without_denoiser_black_blox_Cifar=pickle.Unpickler(f).load()
-        degree_of_change_with_denoiser_black_blox_Cifar=pickle.Unpickler(f).load()
+with open(cfg.DATA_PATH+'efficiency_denoiser/denosier_efficiency_black_box_Mnist', 'rb') as f:
+    degree_of_change_without_denoiser_black_blox_Mnist=pickle.Unpickler(f).load()
+    degree_of_change_with_denoiser_black_blox_Mnist=pickle.Unpickler(f).load()
+        
+with open(cfg.DATA_PATH+'efficiency_denoiser/denosier_efficiency_black_box_Cifar', 'rb') as f:
+    degree_of_change_without_denoiser_black_blox_Cifar=pickle.Unpickler(f).load()
+    degree_of_change_with_denoiser_black_blox_Cifar=pickle.Unpickler(f).load()
 ```
 
 ### Plot

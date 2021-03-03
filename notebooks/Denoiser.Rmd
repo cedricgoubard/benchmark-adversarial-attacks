@@ -42,6 +42,8 @@ tf.config.experimental.set_virtual_device_configuration(
     gpus[0],
     [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4*1024)]
 )
+
+cfg = get_cfg("../config.yaml")
 ```
 
 ###  Test of the denoiser againt white box attackw (FGSM)
@@ -74,16 +76,17 @@ def total_run(data_set_name):
         metrics=['accuracy']
         )
     print("====Adversarial attacks on model+denoiser====")
-    if exists(Config.DATA_PATH+'efficiency_denoiser/denosier_efficiency_white_box_'+str(data_set_name))==False:
-        SR_FGSM_dic_without_defense,SR_FGSM_dic_with_defense=attack_runner(model_effnet,model_with_defense,X_test[7000:7100], y_test[7000:7100], [0.1,1,5,10,25,50,75,100])
-        with open(Config.DATA_PATH+'efficiency_denoiser/denosier_efficiency_white_box_'+str(data_set_name), 'wb') as f:
+    if exists(cfg.DATA_PATH+'efficiency_denoiser/denosier_efficiency_white_box_'+str(data_set_name)) == False:
+        SR_FGSM_dic_without_defense, SR_FGSM_dic_with_defense = attack_runner(
+            model_effnet, model_with_defense, X_test[7000:7100], y_test[7000:7100], [0.1, 1, 5, 10, 25, 50, 75, 100])
+        with open(cfg.DATA_PATH+'efficiency_denoiser/denosier_efficiency_white_box_'+str(data_set_name), 'wb') as f:
             pickle.Pickler(f).dump(SR_FGSM_dic_without_defense)
             pickle.Pickler(f).dump(SR_FGSM_dic_with_defense)
     else:
-        with open(Config.DATA_PATH+'efficiency_denoiser/denosier_efficiency_white_box_'+str(data_set_name), 'rb') as f:
-            SR_FGSM_dic_without_defense=pickle.Unpickler(f).load()
-            SR_FGSM_dic_with_defense=pickle.Unpickler(f).load()
-    return(SR_FGSM_dic_without_defense,SR_FGSM_dic_with_defense)
+        with open(cfg.DATA_PATH+'efficiency_denoiser/denosier_efficiency_white_box_'+str(data_set_name), 'rb') as f:
+            SR_FGSM_dic_without_defense = pickle.Unpickler(f).load()
+            SR_FGSM_dic_with_defense = pickle.Unpickler(f).load()
+    return(SR_FGSM_dic_without_defense, SR_FGSM_dic_with_defense)
 ```
 
 ```{python}
@@ -151,19 +154,19 @@ def prep_models(data_set_name):
 ```
 
 ```{python}
-data_set_name='Mnist'
-if exists(Config.DATA_PATH+'efficiency_denoiser/denosier_efficiency_black_box_'+str(data_set_name))==False:
-        degree_of_change_without_defense=boundary_attack_run(model_effnet,X_test[1])
-        degree_of_change_with_defense=boundary_attack_run(model_with_defense,X_test[1])
-        with open(Config.DATA_PATH+'efficiency_denoiser/denosier_efficiency_black_box_'+str(data_set_name), 'wb') as f:
-            pickle.Pickler(f).dump(degree_of_change_without_defense)
-            pickle.Pickler(f).dump(degree_of_change_with_defense)
+data_set_name = 'Mnist'
+if exists(cfg.DATA_PATH+'efficiency_denoiser/denosier_efficiency_black_box_'+str(data_set_name)) == False:
+    degree_of_change_without_defense = boundary_attack_run(
+        model_effnet, X_test[1])
+    degree_of_change_with_defense = boundary_attack_run(
+        model_with_defense, X_test[1])
+    with open(cfg.DATA_PATH+'efficiency_denoiser/denosier_efficiency_black_box_'+str(data_set_name), 'wb') as f:
+        pickle.Pickler(f).dump(degree_of_change_without_defense)
+        pickle.Pickler(f).dump(degree_of_change_with_defense)
 else:
-    with open(Config.DATA_PATH+'efficiency_denoiser/denosier_efficiency_black_box_'+str(data_set_name), 'rb') as f:
-        degree_of_change_without_defense=pickle.Unpickler(f).load()
-        degree_of_change_with_defense=pickle.Unpickler(f).load()
-
-
+    with open(cfg.DATA_PATH+'efficiency_denoiser/denosier_efficiency_black_box_'+str(data_set_name), 'rb') as f:
+        degree_of_change_without_defense = pickle.Unpickler(f).load()
+        degree_of_change_with_defense = pickle.Unpickler(f).load()
 ```
 
 ```{python}
@@ -217,18 +220,19 @@ plt.show()
 ```
 
 ```{python}
-data_set_name='Cifar'
-if exists(Config.DATA_PATH+'efficiency_denoiser/denosier_efficiency_black_box_'+str(data_set_name))==False:
-        degree_of_change_without_defense=boundary_attack_run(model_effnet,X_test[1])
-        degree_of_change_with_defense=boundary_attack_run(model_with_defense,X_test[1])
-        with open(Config.DATA_PATH+'efficiency_denoiser/denosier_efficiency_black_box_'+str(data_set_name), 'wb') as f:
-            pickle.Pickler(f).dump(degree_of_change_without_defense)
-            pickle.Pickler(f).dump(degree_of_change_with_defense)
+data_set_name = 'Cifar'
+if exists(cfg.DATA_PATH+'efficiency_denoiser/denosier_efficiency_black_box_'+str(data_set_name)) == False:
+    degree_of_change_without_defense = boundary_attack_run(
+        model_effnet, X_test[1])
+    degree_of_change_with_defense = boundary_attack_run(
+        model_with_defense, X_test[1])
+    with open(cfg.DATA_PATH+'efficiency_denoiser/denosier_efficiency_black_box_'+str(data_set_name), 'wb') as f:
+        pickle.Pickler(f).dump(degree_of_change_without_defense)
+        pickle.Pickler(f).dump(degree_of_change_with_defense)
 else:
-    with open(Config.DATA_PATH+'efficiency_denoiser/denosier_efficiency_black_box_'+str(data_set_name), 'rb') as f:
-        degree_of_change_without_defense=pickle.Unpickler(f).load()
-        degree_of_change_with_defense=pickle.Unpickler(f).load()
-
+    with open(cfg.DATA_PATH+'efficiency_denoiser/denosier_efficiency_black_box_'+str(data_set_name), 'rb') as f:
+        degree_of_change_without_defense = pickle.Unpickler(f).load()
+        degree_of_change_with_defense = pickle.Unpickler(f).load()
 ```
 
 ```{python}

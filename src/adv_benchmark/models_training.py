@@ -21,6 +21,7 @@ from tensorflow.keras.utils import to_categorical
 from efficientnet.tfkeras import EfficientNetB7
 from art.utils import load_dataset  # to play with cifar images
 
+from adv_benchmark.config import get_cfg
 
 
 def pick_data_set(name):
@@ -75,48 +76,53 @@ def train_and_save_effnet(data_set_name):
     '''
     (X_train,X_test,y_train,y_test)=pick_data_set(data_set_name)
     tf.keras.backend.clear_session()
-    effnet_base = EfficientNetB7(weights='imagenet', include_top=False, input_shape=(32, 32, 3))
-    effnet_base.trainable=True
-    x = GlobalMaxPooling2D(name='pool_1')(effnet_base.layers[-2].output)
-    x = Dropout(0.2, name="dropout_2")(x)
-    x = Dense(32)(x)
-    x = Dense(10,name='fc_2')(x)
-    o = Activation('softmax', name='act_2')(x)
-    model_effnet = Model(inputs=effnet_base.input, outputs=[o])
+    effnet_base = EfficientNetB7(
+        weights="imagenet", include_top=False, input_shape=(32, 32, 3)
+    )
+    effnet_base.trainable = True
+    layer = GlobalMaxPooling2D(name="pool_1")(effnet_base.layers[-2].output)
+    layer = Dropout(0.2, name="dropout_2")(layer)
+    layer = Dense(32)(layer)
+    layer = Dense(10, name="fc_2")(layer)
+    output = Activation("softmax", name="act_2")(layer)
+    model_effnet = Model(inputs=effnet_base.input, outputs=[output])
 
-
-    
-    if exists(Config.MODELS_PATH+'effnet_model_'+str(data_set_name)+'.h5')==False:
+    cfg = get_cfg()
+    model_path = cfg.MODELS_PATH + "effnet_model_" + str(data_set_name) + ".h5"
+    if not exists(model_path):
         model_effnet.compile(
-            loss='categorical_crossentropy',
-            optimizer='nadam',
-            metrics=['accuracy']
-            )
-        history = model_effnet.fit(X_train, y_train,
-                      epochs=5,
-                      batch_size = 128,
-                      validation_split=0.1,
-                      shuffle=True,
-                      verbose=1)
-        model_effnet.save(Config.MODELS_PATH+'effnet_model_'+str(data_set_name)+'.h5')
+            loss="categorical_crossentropy", optimizer="nadam", metrics=["accuracy"]
+        )
+        _ = model_effnet.fit(
+            X_train,
+            y_train,
+            epochs=5,
+            batch_size=128,
+            validation_split=0.1,
+            shuffle=True,
+            verbose=1,
+        )
+        model_effnet.save(model_path)
 
     else:
-        model_effnet=load_model(Config.MODELS_PATH+'effnet_model_'+str(data_set_name)+'.h5')
-        
-    return(model_effnet)
+        model_effnet = load_model(model_path)
+
+    return model_effnet
+
 
 def train_and_save_small_model(data_set_name):
     '''
     This fonction train (or load) and save an instance of a small custom CNN
     -name : 'Cifar' or 'Mnist'
     output:
-    -small model (tensorflow model): trained instance of the small model 
+    -small model (tensorflow model): trained instance of the small model
 
-    '''
-    
-    if exists(Config.MODELS_PATH+'small_model_'+str(data_set_name)+'.h5')==False:
-        (X_train,X_test,y_train,y_test)=pick_data_set(data_set_name)
-        tf.keras.backend.clear_session()   
+    """
+    cfg = get_cfg()
+    model_path = cfg.MODELS_PATH + "small_model_" + str(data_set_name) + ".h5"
+    if not exists(model_path):
+        (X_train, _, y_train, _) = pick_data_set(data_set_name)
+        tf.keras.backend.clear_session()
         small_model = tf.keras.models.Sequential()
         small_model.add(Conv2D(64, (3, 3), activation='relu', input_shape=(32,32,3)))
         small_model.add(MaxPooling2D(2, 2))
@@ -128,21 +134,20 @@ def train_and_save_small_model(data_set_name):
 
 
         small_model.compile(
-            loss='categorical_crossentropy',
-            optimizer='nadam',
-            metrics=['accuracy']
-            )
+            loss="categorical_crossentropy", optimizer="nadam", metrics=["accuracy"]
+        )
 
+        _ = small_model.fit(
+            X_train,
+            y_train,
+            epochs=10,
+            batch_size=128,
+            validation_split=0.1,
+            shuffle=True,
+            verbose=1,
+        )
 
-        history = small_model.fit(X_train, y_train,
-                      epochs=10,
-                      batch_size =128,
-                      validation_split=0.1,
-                      shuffle=True,
-                      verbose=1)
-
-
-        small_model.save(Config.MODELS_PATH+'small_model_'+str(data_set_name)+'.h5')
+        small_model.save(model_path)
     else:
-        small_model=load_model(Config.MODELS_PATH+'small_model_'+str(data_set_name)+'.h5')
-    return(small_model)
+        small_model = load_model(model_path)
+    return small_model

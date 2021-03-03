@@ -45,6 +45,8 @@ tf.config.experimental.set_virtual_device_configuration(
     gpus[0],
     [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=6*1024)]
 )
+
+cfg = get_cfg("../config.yaml")
 ```
 
 3 facteurs pouvant influencer la perfomance d'attaques adverses ont été identifié:
@@ -118,11 +120,13 @@ name='Mnist'
 (X_train,X_test,y_train,y_test)=pick_data_set(name)
 small_model=train_and_save_small_model(name)
 
-if exists(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_'+str(name))==False:
-    (SR_deepfool_1step_dic_small_model,SR_deepfool_mutliple_steps_dic_small_model,SR_FGSM_dic_small_model)=three_attacks_runner(small_model,small_model,X_test[:100], y_test[:100], epsilon_list)
-    SR_blackbox_dic_small_model=boundary_attack_run(small_model,X_test[0],iterations=150)
+if exists(cfg.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_'+str(name)) == False:
+    (SR_deepfool_1step_dic_small_model, SR_deepfool_mutliple_steps_dic_small_model,
+     SR_FGSM_dic_small_model) = three_attacks_runner(small_model, small_model, X_test[:100], y_test[:100], epsilon_list)
+    SR_blackbox_dic_small_model = boundary_attack_run(
+        small_model, X_test[0], iterations=150)
 
-    with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_'+str(name), 'wb') as f:
+    with open(cfg.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_'+str(name), 'wb') as f:
         pickle.Pickler(f).dump(SR_deepfool_1step_dic_small_model)
         pickle.Pickler(f).dump(SR_deepfool_mutliple_steps_dic_small_model)
         pickle.Pickler(f).dump(SR_FGSM_dic_small_model)
@@ -130,16 +134,18 @@ if exists(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_small_mode
 ```
 
 ```{python}
-epsilon_list=[0.1,1,5,10,25,50,75,100]
-name='Mnist'
+epsilon_list = [0.1, 1, 5, 10, 25, 50, 75, 100]
+name = 'Mnist'
 
-(X_train,X_test,y_train,y_test)=pick_data_set(name)
-model_effnet=train_and_save_effnet(name)
+(X_train, X_test, y_train, y_test) = pick_data_set(name)
+model_effnet = train_and_save_effnet(name)
 
-if exists(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_'+str(name))==False:
-    (SR_deepfool_1step_dic_model_effnet,SR_deepfool_mutliple_steps_dic_model_effnet,SR_FGSM_dic_model_effnet)=three_attacks_runner(model_effnet,model_effnet,X_test[:100], y_test[:100], epsilon_list)
-    SR_blackbox_dic_model_effnet=boundary_attack_run(small_model,X_test[0],iterations=150)
-    with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_'+str(name), 'wb') as f:
+if exists(cfg.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_'+str(name)) == False:
+    (SR_deepfool_1step_dic_model_effnet, SR_deepfool_mutliple_steps_dic_model_effnet,
+     SR_FGSM_dic_model_effnet) = three_attacks_runner(model_effnet, model_effnet, X_test[:100], y_test[:100], epsilon_list)
+    SR_blackbox_dic_model_effnet = boundary_attack_run(
+        small_model, X_test[0], iterations=150)
+    with open(cfg.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_'+str(name), 'wb') as f:
         pickle.Pickler(f).dump(SR_deepfool_1step_dic_model_effnet)
         pickle.Pickler(f).dump(SR_deepfool_mutliple_steps_dic_model_effnet)
         pickle.Pickler(f).dump(SR_FGSM_dic_model_effnet)
@@ -153,11 +159,13 @@ name='Cifar'
 (X_train,X_test,y_train,y_test)=pick_data_set(name)
 small_model=train_and_save_small_model(name)
 
-if exists(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_'+str(name))==False:
-    (SR_deepfool_1step_dic_small_model,SR_deepfool_mutliple_steps_dic_small_model,SR_FGSM_dic_small_model)=three_attacks_runner(small_model,small_model,X_test[:100], y_test[:100], epsilon_list)
-    SR_blackbox_dic_small_model=boundary_attack_run(small_model,X_test[0],iterations=150)
+if exists(cfg.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_'+str(name)) == False:
+    (SR_deepfool_1step_dic_small_model, SR_deepfool_mutliple_steps_dic_small_model,
+     SR_FGSM_dic_small_model) = three_attacks_runner(small_model, small_model, X_test[:100], y_test[:100], epsilon_list)
+    SR_blackbox_dic_small_model = boundary_attack_run(
+        small_model, X_test[0], iterations=150)
 
-    with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_'+str(name), 'wb') as f:
+    with open(cfg.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_'+str(name), 'wb') as f:
         pickle.Pickler(f).dump(SR_deepfool_1step_dic_small_model)
         pickle.Pickler(f).dump(SR_deepfool_mutliple_steps_dic_small_model)
         pickle.Pickler(f).dump(SR_FGSM_dic_small_model)
@@ -165,16 +173,18 @@ if exists(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_small_mode
 ```
 
 ```{python}
-epsilon_list=[0.1,1,5,10,25,50,75,100]
-name='Cifar'
+epsilon_list = [0.1, 1, 5, 10, 25, 50, 75, 100]
+name = 'Cifar'
 
-(X_train,X_test,y_train,y_test)=pick_data_set(name)
-model_effnet=train_and_save_effnet(name)
+(X_train, X_test, y_train, y_test) = pick_data_set(name)
+model_effnet = train_and_save_effnet(name)
 
-if exists(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_'+str(name))==False:
-    (SR_deepfool_1step_dic_model_effnet,SR_deepfool_mutliple_steps_dic_model_effnet,SR_FGSM_dic_model_effnet)=three_attacks_runner(model_effnet,model_effnet,X_test[:100], y_test[:100], epsilon_list)
-    SR_blackbox_dic_model_effnet=boundary_attack_run(small_model,X_test[0],iterations=150)
-    with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_'+str(name), 'wb') as f:
+if exists(cfg.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_'+str(name)) == False:
+    (SR_deepfool_1step_dic_model_effnet, SR_deepfool_mutliple_steps_dic_model_effnet,
+     SR_FGSM_dic_model_effnet) = three_attacks_runner(model_effnet, model_effnet, X_test[:100], y_test[:100], epsilon_list)
+    SR_blackbox_dic_model_effnet = boundary_attack_run(
+        small_model, X_test[0], iterations=150)
+    with open(cfg.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_'+str(name), 'wb') as f:
         pickle.Pickler(f).dump(SR_deepfool_1step_dic_model_effnet)
         pickle.Pickler(f).dump(SR_deepfool_mutliple_steps_dic_model_effnet)
         pickle.Pickler(f).dump(SR_FGSM_dic_model_effnet)
@@ -182,30 +192,34 @@ if exists(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effn
 ```
 
 ```{python}
-with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_Cifar', 'rb') as f:
-    SR_deepfool_1step_dic_small_model_Cifar=pickle.Unpickler(f).load()
-    SR_deepfool_mutliple_steps_dic_small_model_Cifar=pickle.Unpickler(f).load()
-    SR_FGSM_dic_small_model_Cifar=pickle.Unpickler(f).load()
-    SR_blackbox_dic_small_model_Cifar=pickle.Unpickler(f).load()
-    
-with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_Cifar', 'rb') as f:
-    SR_deepfool_1step_dic_model_effnet_Cifar=pickle.Unpickler(f).load()
-    SR_deepfool_mutliple_steps_dic_model_effnet_Cifar=pickle.Unpickler(f).load()
-    SR_FGSM_dic_model_effnet_Cifar=pickle.Unpickler(f).load()
-    SR_blackbox_dic_model_effnet_Cifar=pickle.Unpickler(f).load()
-    
-with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_Mnist', 'rb') as f:
-    SR_deepfool_1step_dic_small_model_Mnist=pickle.Unpickler(f).load()
-    SR_deepfool_mutliple_steps_dic_small_model_Mnist=pickle.Unpickler(f).load()
-    SR_FGSM_dic_small_model_Mnist=pickle.Unpickler(f).load()
-    SR_blackbox_dic_small_model_Mnist=pickle.Unpickler(f).load()
-    
+with open(cfg.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_Cifar', 'rb') as f:
+    SR_deepfool_1step_dic_small_model_Cifar = pickle.Unpickler(f).load()
+    SR_deepfool_mutliple_steps_dic_small_model_Cifar = pickle.Unpickler(
+        f).load()
+    SR_FGSM_dic_small_model_Cifar = pickle.Unpickler(f).load()
+    SR_blackbox_dic_small_model_Cifar = pickle.Unpickler(f).load()
 
-with open(Config.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_Mnist', 'rb') as f:
-    SR_deepfool_1step_dic_model_effnet_Mnist=pickle.Unpickler(f).load()
-    SR_deepfool_mutliple_steps_dic_model_effnet_Mnist=pickle.Unpickler(f).load()
-    SR_FGSM_dic_model_effnet_Mnist=pickle.Unpickler(f).load()
-    SR_blackbox_dic_model_effnet_Mnist=pickle.Unpickler(f).load()
+with open(cfg.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_Cifar', 'rb') as f:
+    SR_deepfool_1step_dic_model_effnet_Cifar = pickle.Unpickler(f).load()
+    SR_deepfool_mutliple_steps_dic_model_effnet_Cifar = pickle.Unpickler(
+        f).load()
+    SR_FGSM_dic_model_effnet_Cifar = pickle.Unpickler(f).load()
+    SR_blackbox_dic_model_effnet_Cifar = pickle.Unpickler(f).load()
+
+with open(cfg.DATA_PATH+'perfs_models_without_defense/perfs_global_small_model_Mnist', 'rb') as f:
+    SR_deepfool_1step_dic_small_model_Mnist = pickle.Unpickler(f).load()
+    SR_deepfool_mutliple_steps_dic_small_model_Mnist = pickle.Unpickler(
+        f).load()
+    SR_FGSM_dic_small_model_Mnist = pickle.Unpickler(f).load()
+    SR_blackbox_dic_small_model_Mnist = pickle.Unpickler(f).load()
+
+
+with open(cfg.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_Mnist', 'rb') as f:
+    SR_deepfool_1step_dic_model_effnet_Mnist = pickle.Unpickler(f).load()
+    SR_deepfool_mutliple_steps_dic_model_effnet_Mnist = pickle.Unpickler(
+        f).load()
+    SR_FGSM_dic_model_effnet_Mnist = pickle.Unpickler(f).load()
+    SR_blackbox_dic_model_effnet_Mnist = pickle.Unpickler(f).load()
 ```
 
 ```{python}

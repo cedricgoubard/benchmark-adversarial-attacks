@@ -51,12 +51,14 @@ def create_model_with_defense(data_set_name):
     input: 
     -data set name (str) : name of the data set on which to train the model ('Mnist' or 'Cifar' )
     -output: a trained tensorflow model
-    '''
+    """
 
-    (X_train,X_test,y_train,y_test)=pick_data_set(data_set_name)
-    model_without_def=train_and_save_effnet(data_set_name)
-    
-    
+    (X_train, _, y_train, _) = pick_data_set(data_set_name)
+    model_without_def = train_and_save_effnet(data_set_name)
+
+    cfg = get_cfg()
+    model_path = cfg.MODELS_PATH + "/random_padding/" + str(data_set_name) + ".h5"
+
     model_with_def = tf.keras.models.Sequential()
     model_with_def.add(Input(shape=(32,32,3)))
     model_with_def.add(ResizePad())
@@ -64,20 +66,20 @@ def create_model_with_defense(data_set_name):
 
 
     model_with_def.compile(
-        loss='categorical_crossentropy',
-        optimizer='nadam',
-        metrics=['accuracy']
+        loss="categorical_crossentropy", optimizer="nadam", metrics=["accuracy"]
+    )
+    if not exists(model_path):
+        _ = model_with_def.fit(
+            X_train,
+            y_train,
+            epochs=5,
+            batch_size=32,
+            validation_split=0.1,
+            shuffle=True,
+            verbose=1,
         )
-    if exists(Config.MODELS_PATH+'/random_padding/'+str(data_set_name)+'.h5')==False:
-        history = model_with_def.fit(X_train, y_train,
-                      epochs=5,
-                      batch_size = 32,
-                      validation_split=0.1,
-                      shuffle=True,
-                      verbose=1)
-        model_with_def.save_weights(Config.MODELS_PATH+'/random_padding/'+str(data_set_name)+'.h5')
+        model_with_def.save_weights(model_path)
     else:
-        model_with_def.load_weights(Config.MODELS_PATH+'/random_padding/'+str(data_set_name)+'.h5')
-          
-    
-    return(model_with_def)
+        model_with_def.load_weights(model_path)
+
+    return model_with_def

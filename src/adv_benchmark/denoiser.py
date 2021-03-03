@@ -112,31 +112,45 @@ def make_adv_data_set(data_set_name,model_effnet,number_of_image_to_use=6000,att
     -benign_list (list of numpy arrays): benign images corresponding to the images in adv_list 
     -adv_true_label: true labels of the images (attention here the are not one hot encoded)
 
-  
-    '''
-    
-    (X_train,X_test,y_train,y_test)=pick_data_set(data_set_name)
-    if exists(Config.DATA_PATH+'adv images and benign images '+str(data_set_name))==False:
-        (adv_list,benign_list,adv_true_label)=data_set_maker(model_effnet,attack, X_test[:number_of_image_to_use], y_test[:number_of_image_to_use])
-        with open(Config.DATA_PATH+'adv images and benign images '+str(data_set_name), 'wb') as f:
+
+    """
+    (_, X_test, _, y_test) = pick_data_set(data_set_name)
+    cfg = get_cfg()
+
+    path = cfg.DATA_PATH + "adv images and benign images " + str(data_set_name)
+
+    if not exists(path):
+        (adv_list, benign_list, adv_true_label) = data_set_maker(
+            model_effnet,
+            attack,
+            X_test[:number_of_image_to_use],
+            y_test[:number_of_image_to_use],
+        )
+        with open(path, "wb") as f:  # pylint: disable=invalid-name
             pickle.Pickler(f).dump(adv_list)
             pickle.Pickler(f).dump(benign_list)
             pickle.Pickler(f).dump(adv_true_label)
     else:
-        with open(Config.DATA_PATH+'adv images and benign images '+str(data_set_name), 'rb') as f:
-            adv_list=pickle.Unpickler(f).load()
-            benign_list=pickle.Unpickler(f).load()
-            adv_true_label=pickle.Unpickler(f).load()
+        with open(path, "rb") as f:  # pylint: disable=invalid-name
+            adv_list = pickle.Unpickler(f).load()
+            benign_list = pickle.Unpickler(f).load()
+            adv_true_label = pickle.Unpickler(f).load()
 
-    ###let's add some benign examples to the data set and shuffle the result
+    # let us add some benign examples to the data set and shuffle the result
+    adv_list.extend(X_test[number_of_image_to_use : number_of_image_to_use + 1000])
+    benign_list.extend(X_test[number_of_image_to_use : number_of_image_to_use + 1000])
+    adv_true_label.extend(
+        list(
+            map(
+                np.argmax,
+                y_test[number_of_image_to_use : number_of_image_to_use + 1000],
+            )
+        )
+    )
 
-    adv_list.extend(X_test[number_of_image_to_use:number_of_image_to_use+1000])
-    benign_list.extend(X_test[number_of_image_to_use:number_of_image_to_use+1000])
-    adv_true_label.extend(list(map(np.argmax,y_test[number_of_image_to_use:number_of_image_to_use+1000])))
-
-    adv_list=np.array(adv_list)
-    benign_list=np.array(benign_list)
-    adv_true_label=np.array(adv_true_label)
+    adv_list = np.array(adv_list)
+    benign_list = np.array(benign_list)
+    adv_true_label = np.array(adv_true_label)
 
     indices = np.arange(len(adv_list))
     random.shuffle(indices)

@@ -95,48 +95,53 @@ class NewModel(tf.keras.Model):
         -epochs(int>0): number of training epochs
         -c_list (list of float between 0 and 1): contains the c parameters for the objective function 0=no adv training, 1=adv training only
         -data_set_list (list of str): names of the data sets on which to train the model
-        
-        '''
-                
-        for data_set_name in data_set_list:
-            
-            for c in c_list:
-                (X_train,X_test,y_train,y_test)=pick_data_set(data_set_name)
-                train_data_set=tf.data.Dataset.from_tensor_slices((X_train,y_train)).shuffle(buffer_size=100000).batch(128)
-                print("======= training on data_set: "+str(data_set_name)+' c:'+str(c)+'======')
-                self.c=c
-                if exists(Config.MODELS_PATH+'adversarial_training/'+str(data_set_name)+'/c='+str(c)+'.h5')==False:
-                    pred=list(map(np.argmax,self.model(X_test[:1000])))
-                    true_values=list(map(np.argmax,y_test[:1000]))
-                    acc=np.sum([1 for i in range(len(pred)) if pred[i]==true_values[i]])/len(pred)         
-                    print('Accuracy before training is {} '.format(acc))
-                    print('-----------')
-                    for epoch in range(epochs):                        
-                        start = time.time()
-                        for (x,y) in tqdm(train_data_set,position=0):
-                            x=tf.cast(x,dtype='float32')
-                            self.train_step(x,y)           
+        """
+        cfg = get_cfg()
 
-                        pred=list(map(np.argmax,self.model(X_test[:1000])))
-                        true_values=list(map(np.argmax,y_test[:1000]))
-                        acc=np.sum([1 for i in range(len(pred)) if pred[i]==true_values[i]])/len(pred)         
+        for data_set_name, c_param in itertools.product(data_set_list, c_list):
+            save_path = join(
+                cfg.MODELS_PATH, "adversarial_training", str(data_set_name), f"c={c_param}.h5"
+                )
 
-                        print ('Time for epoch {} is {} sec'.format(epoch + 1, time.time()-start))
-                        print('-----------')
-                        print('Accuracy for epoch {} is {} '.format(epoch + 1, acc))   
-                        
-                    self.model.save_weights(Config.MODELS_PATH+'adversarial_training/'+str(data_set_name)+'/c='+str(c)+'.h5')
-                else:
-                    self.model.load_weights(Config.MODELS_PATH+'adversarial_training/'+str(data_set_name)+'/c='+str(c)+'.h5')
-                    pred=list(map(np.argmax,self.model(X_test[:1000])))
-                    true_values=list(map(np.argmax,y_test[:1000]))
-                    acc=np.sum([1 for i in range(len(pred)) if pred[i]==true_values[i]])/len(pred)         
+            (X_train, X_test, y_train, y_test) = pick_data_set(data_set_name)
+            train_data_set = (
+                tf.data.Dataset.from_tensor_slices((X_train, y_train))
+                .shuffle(buffer_size=100000)
+                .batch(128)
+            )
 
-                    print('-----------')
-                    print('Accuracy is {} '.format(acc))   
-                    
-        return()
-    
+            print(f"\n======= Looking for dataset: {data_set_name} c: {c_param} =======")
+            self.c_param = c_param
+
+            if not exists(save_path):
+                print(f"Dataset not found at {save_path}; training new model")
+                acc = compute_acc(self.model, X_test[:1000], y_test[:1000])
+
+                print(f"Accuracy before training is {acc}\n--------------")
+                for epoch in range(epochs):
+                    start = time.time()
+                    for (data, label) in tqdm(train_data_set, position=0):
+                        data = tf.cast(data, dtype="float32")
+                        self.train_step(data, label)
+
+                    acc = compute_acc(self.model, X_test[:1000], y_test[:1000])
+
+                    print(f"Time for epoch {epoch + 1} is {time.time() - start} sec")
+                    print("-----------")
+                    print(f"Accuracy for epoch {epoch + 1} is {acc} ")
+
+                self.model.save_weights(save_path)
+
+            else:
+                print(f"Dataset found at {save_path}; using pretrained model")
+                self.model.load_weights(save_path)
+                acc = compute_acc(self.model, X_test[:1000], y_test[:1000])
+
+                print("-----------")
+                print(f"Accuracy is {acc}")
+
+        return ()
+
     def call(self, inputs):
         x = self.model(inputs)
         return x

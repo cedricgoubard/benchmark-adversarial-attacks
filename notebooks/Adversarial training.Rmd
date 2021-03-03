@@ -46,6 +46,8 @@ tf.config.experimental.set_virtual_device_configuration(
 
 tf.config.run_functions_eagerly(False)
 tf.random.set_seed(0)
+
+cfg = get_cfg("../config.yaml")
 ```
 
 In this defence strategy, we customize the model's objective function to combine 2 aspects:
@@ -59,27 +61,33 @@ $$J_{tot}(\theta,x,y)=(1-c)J(\theta,x,y)+cJ(\theta,(x+{\epsilon}sign(\nabla_{x}J
 #### 2. Train models and launch white box attacks
 
 ```{python}
-def attacks(data_set_list=['Mnist','Cifar']):
-    data_set_plots={}
-    model=train_models()
+model = train_models()
+```
+
+```{python}
+def attacks(models=train_models(), data_set_list=['Mnist', 'Cifar']):
+    cfg = get_cfg()
+    data_set_plots = {}
     for data_set_name in data_set_list:
-        (_,X_test,_,y_test)=pick_data_set(data_set_name)        
-        plots={}
-        epsilons=[0.1,1,5,10,25,50,75,100]
-        X=X_test[7000:7100]
-        y=y_test[7000:7100]
-        for c in [0,0.1,0.3,0.5,0.7,0.9]:
-            print("======= attack: data_set: "+str(data_set_name)+' c:'+str(c)+'======')
-            model.load_weights(Config.MODELS_PATH+'/adversarial_training/'+str(data_set_name)+'/c='+str(c)+'.h5')
-            if exists(Config.DATA_PATH+'efficiency_adv_trained/'+str(data_set_name)+'/c='+str(c))==False:
-                plots[c],_=attack_runner(model,model,X, y, epsilons)
-                with open(Config.DATA_PATH+'efficiency_adv_trained/'+str(data_set_name)+'/c='+str(c), 'wb') as f:
-                        pickle.Pickler(f).dump(plots[c])
+        (_, X_test, _, y_test) = pick_data_set(data_set_name)
+        plots = {}
+        epsilons = [0.1, 1, 5, 10, 25, 50, 75, 100]
+        X = X_test[7000:7100]
+        y = y_test[7000:7100]
+        for c in [0, 0.1, 0.3, 0.5, 0.7, 0.9]:
+            print("======= attack: data_set: " +
+                  str(data_set_name)+' c:'+str(c)+'======')
+            model.load_weights(
+                cfg.MODELS_PATH+'/adversarial_training/'+str(data_set_name)+'/c='+str(c)+'.h5')
+            if exists(cfg.DATA_PATH+'efficiency_adv_trained/'+str(data_set_name)+'/c='+str(c)) == False:
+                plots[c], _ = attack_runner(model, model, X, y, epsilons)
+                with open(cfg.DATA_PATH+'efficiency_adv_trained/'+str(data_set_name)+'/c='+str(c), 'wb') as f:
+                    pickle.Pickler(f).dump(plots[c])
 
             else:
-                with open(Config.DATA_PATH+'efficiency_adv_trained/'+str(data_set_name)+'/c='+str(c), 'rb') as f:
-                    plots[c]=pickle.Unpickler(f).load()
-        data_set_plots[data_set_name]=plots
+                with open(cfg.DATA_PATH+'efficiency_adv_trained/'+str(data_set_name)+'/c='+str(c), 'rb') as f:
+                    plots[c] = pickle.Unpickler(f).load()
+        data_set_plots[data_set_name] = plots
     return(data_set_plots)
 
 
@@ -120,22 +128,19 @@ Let's save the 'best model' --> c=0.9
 Let's now create some adversarial examples that will fool the most basic model.
 
 ```{python}
-model=train_models()
-```
-
-```{python}
-model.load_weights(Config.MODELS_PATH+'/adversarial_training/Cifar/c=0.h5')
-(_,X_test,_,y_test)=pick_data_set('Cifar')
-model_to_attack=TensorFlowModel(model , bounds=(0, 255))
-attack=LinfFastGradientAttack()
-image_list=X_test[:100]
-labels=list(map(np.argmax,y_test[:100]))
-adv_list=[]
-true_label=[]
-for i,image in enumerate(tqdm(image_list,position=0)):
-    image = np.asarray(image)[:,:,:3].astype('float32')
-    image = convert_to_tensor(np.expand_dims(image,axis=0))
-    label=labels[i]
+cfg = get_cfg()
+model.load_weights(cfg.MODELS_PATH+'/adversarial_training/Cifar/c=0.h5')
+(_, X_test, _, y_test) = pick_data_set('Cifar')
+model_to_attack = TensorFlowModel(model, bounds=(0, 255))
+attack = LinfFastGradientAttack()
+image_list = X_test[:100]
+labels = list(map(np.argmax, y_test[:100]))
+adv_list = []
+true_label = []
+for i, image in enumerate(tqdm(image_list, position=0)):
+    image = np.asarray(image)[:, :, :3].astype('float32')
+    image = convert_to_tensor(np.expand_dims(image, axis=0))
+    label = labels[i]
     label = tf.convert_to_tensor(np.array([label]))
     _, clipped, is_adv = attack(model_to_attack,image,label,epsilons=5)
     if bool(is_adv[0])==True:
@@ -152,8 +157,9 @@ adv_image_num=9
 plt.figure(figsize=(10,10))
 ax = plt.subplot(3, 3, 2)
 plt.imshow(adv_list[adv_image_num].astype('int32'))
-for i,c in enumerate([0,0.1,0.3,0.5,0.7,0.9]): 
-    model.load_weights(Config.MODELS_PATH+'adversarial_training/Cifar/c='+str(c)+'.h5')
+for i, c in enumerate([0, 0.1, 0.3, 0.5, 0.7, 0.9]):
+    model.load_weights(
+        cfg.MODELS_PATH+'adversarial_training/Cifar/c='+str(c)+'.h5')
     ax = plt.subplot(3, 3, 3+i + 1)
     color=['blue' for i in range(10)]
     prediction=model.predict(np.expand_dims(adv_list[adv_image_num],axis=0))[0]
@@ -173,8 +179,9 @@ adv_image_num=2
 plt.figure(figsize=(10,10))
 ax = plt.subplot(3, 3, 2)
 plt.imshow(adv_list[adv_image_num].astype('int32'))
-for i,c in enumerate([0,0.1,0.3,0.5,0.7,0.9]):
-    model.load_weights(Config.MODELS_PATH+'adversarial_training/Cifar/c='+str(c)+'.h5')
+for i, c in enumerate([0, 0.1, 0.3, 0.5, 0.7, 0.9]):
+    model.load_weights(
+        cfg.MODELS_PATH+'adversarial_training/Cifar/c='+str(c)+'.h5')
     ax = plt.subplot(3, 3, 3+i + 1)
     color=['blue' for i in range(10)]
     prediction=model.predict(np.expand_dims(adv_list[adv_image_num],axis=0))[0]
@@ -195,21 +202,20 @@ model=train_models()
 #### Mnist
 
 ```{python}
-data_set_name='Mnist'
-(_,X_test,_,y_test)=pick_data_set(data_set_name)        
-if exists(Config.DATA_PATH+'efficiency_adv_trained/black_box'+str(data_set_name))==False:
-        model.load_weights(Config.MODELS_PATH+'adversarial_training/Mnist/c=0.h5')
-        degree_of_change_without_defense=boundary_attack_run(model,X_test[1])
-        model.load_weights(Config.MODELS_PATH+'adversarial_training/Mnist/c=0.9.h5')
-        degree_of_change_with_defense=boundary_attack_run(model,X_test[1])
-        with open(Config.DATA_PATH+'adversarial_training/black_box'+str(data_set_name), 'wb') as f:
-            pickle.Pickler(f).dump(degree_of_change_without_defense)
-            pickle.Pickler(f).dump(degree_of_change_with_defense)
+data_set_name = 'Mnist'
+(_, X_test, _, y_test) = pick_data_set(data_set_name)
+if exists(cfg.DATA_PATH+'efficiency_adv_trained/black_box'+str(data_set_name)) == False:
+    model.load_weights(cfg.MODELS_PATH+'adversarial_training/Mnist/c=0.h5')
+    degree_of_change_without_defense = boundary_attack_run(model, X_test[1])
+    model.load_weights(cfg.MODELS_PATH+'adversarial_training/Mnist/c=0.9.h5')
+    degree_of_change_with_defense = boundary_attack_run(model, X_test[1])
+    with open(cfg.DATA_PATH+'adversarial_training/black_box'+str(data_set_name), 'wb') as f:
+        pickle.Pickler(f).dump(degree_of_change_without_defense)
+        pickle.Pickler(f).dump(degree_of_change_with_defense)
 else:
-    with open(Config.DATA_PATH+'efficiency_adv_trained/black_box'+str(data_set_name), 'rb') as f:
-        degree_of_change_without_defense=pickle.Unpickler(f).load()
-        degree_of_change_with_defense=pickle.Unpickler(f).load()
-
+    with open(cfg.DATA_PATH+'efficiency_adv_trained/black_box'+str(data_set_name), 'rb') as f:
+        degree_of_change_without_defense = pickle.Unpickler(f).load()
+        degree_of_change_with_defense = pickle.Unpickler(f).load()
 ```
 
 ```{python}
@@ -227,20 +233,20 @@ plt.show()
 #### Cifar
 
 ```{python}
-data_set_name='Cifar'
-(_,X_test,_,y_test)=pick_data_set(data_set_name)        
-if exists(Config.DATA_PATH+'efficiency_adv_trained/black_box'+str(data_set_name))==False:
-        model.load_weights(Config.MODELS_PATH+'adversarial_training/Cifar/c=0.h5')
-        degree_of_change_without_defense=boundary_attack_run(model,X_test[1])
-        model.load_weights(Config.MODELS_PATH+'adversarial_training/Cifar/c=0.9.h5')
-        degree_of_change_with_defense=boundary_attack_run(model,X_test[1])
-        with open(Config.DATA_PATH+'efficiency_adv_trained/black_box'+str(data_set_name), 'wb') as f:
-            pickle.Pickler(f).dump(degree_of_change_without_defense)
-            pickle.Pickler(f).dump(degree_of_change_with_defense)
+data_set_name = 'Cifar'
+(_, X_test, _, y_test) = pick_data_set(data_set_name)
+if exists(cfg.DATA_PATH+'efficiency_adv_trained/black_box'+str(data_set_name)) == False:
+    model.load_weights(cfg.MODELS_PATH+'adversarial_training/Cifar/c=0.h5')
+    degree_of_change_without_defense = boundary_attack_run(model, X_test[1])
+    model.load_weights(cfg.MODELS_PATH+'adversarial_training/Cifar/c=0.9.h5')
+    degree_of_change_with_defense = boundary_attack_run(model, X_test[1])
+    with open(cfg.DATA_PATH+'efficiency_adv_trained/black_box'+str(data_set_name), 'wb') as f:
+        pickle.Pickler(f).dump(degree_of_change_without_defense)
+        pickle.Pickler(f).dump(degree_of_change_with_defense)
 else:
-    with open(Config.DATA_PATH+'efficiency_adv_trained/black_box'+str(data_set_name), 'rb') as f:
-        degree_of_change_without_defense=pickle.Unpickler(f).load()
-        degree_of_change_with_defense=pickle.Unpickler(f).load()
+    with open(cfg.DATA_PATH+'efficiency_adv_trained/black_box'+str(data_set_name), 'rb') as f:
+        degree_of_change_without_defense = pickle.Unpickler(f).load()
+        degree_of_change_with_defense = pickle.Unpickler(f).load()
 ```
 
 ```{python}

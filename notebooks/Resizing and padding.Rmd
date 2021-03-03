@@ -70,27 +70,26 @@ def run_white_boxes(data_set_name):
     print('====training model without padding====')
     model_effnet=train_and_save_effnet(data_set_name)
     print('====training model with padding====')
-    model_with_def=create_model_with_defense(data_set_name)
-    
-    model_without_def=model_effnet 
-    
-    
-    if exists(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_'+str(data_set_name))==False:
+    model_with_def = create_model_with_defense(data_set_name)
+
+    model_without_def = model_effnet
+
+    if exists(cfg.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_'+str(data_set_name)) == False:
         print('====attacks on model with padding====')
         SR_FGSM_dic_with_defense,_=attack_runner(model_with_def,model_with_def,X_test[:100], y_test[:100], [0.1,1,5,10,25,50,75,100])
         
         print('====attacks on model without padding====')
-        SR_FGSM_dic_without_defense,_=attack_runner(model_without_def,model_without_def,X_test[:100], y_test[:100], [0.1,1,5,10,25,50,75,100])
-        with open(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_'+str(data_set_name), 'wb') as f:
+        SR_FGSM_dic_without_defense, _ = attack_runner(
+            model_without_def, model_without_def, X_test[:100], y_test[:100], [0.1, 1, 5, 10, 25, 50, 75, 100])
+        with open(cfg.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_'+str(data_set_name), 'wb') as f:
             pickle.Pickler(f).dump(SR_FGSM_dic_with_defense)
             pickle.Pickler(f).dump(SR_FGSM_dic_without_defense)
     else:
-         with open(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_'+str(data_set_name), 'rb') as f:
-            SR_FGSM_dic_with_defense=pickle.Unpickler(f).load()
-            SR_FGSM_dic_without_defense=pickle.Unpickler(f).load()
-            
-    return(SR_FGSM_dic_without_defense,SR_FGSM_dic_with_defense)
-            
+        with open(cfg.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_'+str(data_set_name), 'rb') as f:
+            SR_FGSM_dic_with_defense = pickle.Unpickler(f).load()
+            SR_FGSM_dic_without_defense = pickle.Unpickler(f).load()
+
+    return(SR_FGSM_dic_without_defense, SR_FGSM_dic_with_defense)
 ```
 
 ### Mnist
@@ -139,18 +138,19 @@ model_with_defense=create_model_with_defense('Mnist')
 ```
 
 ```{python}
-data_set_name='Mnist'
-if exists(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name))==False:
-    degree_of_change_without_defense=boundary_attack_run(model_without_defense,X_test[1])
-    degree_of_change_with_defense=boundary_attack_run(model_with_defense,X_test[1])
-    with open(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name), 'wb') as f:
+data_set_name = 'Mnist'
+if exists(cfg.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name)) == False:
+    degree_of_change_without_defense = boundary_attack_run(
+        model_without_defense, X_test[1])
+    degree_of_change_with_defense = boundary_attack_run(
+        model_with_defense, X_test[1])
+    with open(cfg.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name), 'wb') as f:
         pickle.Pickler(f).dump(degree_of_change_without_defense)
         pickle.Pickler(f).dump(degree_of_change_with_defense)
 else:
-    with open(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name), 'rb') as f:
-        degree_of_change_without_defense=pickle.Unpickler(f).load()
-        degree_of_change_with_defense=pickle.Unpickler(f).load()
-
+    with open(cfg.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name), 'rb') as f:
+        degree_of_change_without_defense = pickle.Unpickler(f).load()
+        degree_of_change_with_defense = pickle.Unpickler(f).load()
 ```
 
 ```{python}
@@ -176,17 +176,19 @@ model_with_defense=create_model_with_defense('Cifar')
 ```
 
 ```{python}
-data_set_name='Cifar'
-if exists(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name))==False:
-    degree_of_change_without_defense=boundary_attack_run(model_without_defense,X_test[1])
-    degree_of_change_with_defense=boundary_attack_run(model_with_defense,X_test[1])
-    with open(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name), 'wb') as f:
+data_set_name = 'Cifar'
+if exists(cfg.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name)) == False:
+    degree_of_change_without_defense = boundary_attack_run(
+        model_without_defense, X_test[1])
+    degree_of_change_with_defense = boundary_attack_run(
+        model_with_defense, X_test[1])
+    with open(cfg.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name), 'wb') as f:
         pickle.Pickler(f).dump(degree_of_change_without_defense)
         pickle.Pickler(f).dump(degree_of_change_with_defense)
 else:
-    with open(Config.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name), 'rb') as f:
-        degree_of_change_without_defense=pickle.Unpickler(f).load()
-        degree_of_change_with_defense=pickle.Unpickler(f).load()
+    with open(cfg.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_black_box'+str(data_set_name), 'rb') as f:
+        degree_of_change_without_defense = pickle.Unpickler(f).load()
+        degree_of_change_with_defense = pickle.Unpickler(f).load()
 ```
 
 ```{python}
