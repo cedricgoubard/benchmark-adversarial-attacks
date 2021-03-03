@@ -90,28 +90,26 @@ def attacks(models=train_models(), data_set_list=['Mnist', 'Cifar']):
         data_set_plots[data_set_name] = plots
     return(data_set_plots)
 
-
+data_set_plots = attacks(models=model, data_set_list=['Mnist', 'Cifar'])
 ```
 
 ```{python}
-data_set_plots=attacks(data_set_list=['Mnist','Cifar'])
-```
-
-```{python}
-for c,plot in data_set_plots['Mnist'].items():
-    plt.plot(list(plot.keys()),list(plot.values()),label='c='+str(c))
-plt.grid(True,which="both", linestyle='--')
-plt.title('Successs rate for different degrees of change \n on Mnist images',fontsize=11)
+for c, plot in data_set_plots['Mnist'].items():
+    plt.plot(list(plot.keys()), list(plot.values()), label='c='+str(c))
+plt.grid(True, which="both", linestyle='--')
+plt.title(
+    'Successs rate for different degrees of change \n on Mnist images', fontsize=11)
 plt.xlabel('DOC (%)')
 plt.ylabel('SR')
 plt.legend(loc='upper left')
 ```
 
 ```{python}
-for c,plot in data_set_plots['Cifar'].items():
-    plt.plot(list(plot.keys()),list(plot.values()),label='c='+str(c))
-plt.grid(True,which="both", linestyle='--')
-plt.title('Successs rate for different degrees of change \n on Cifar images',fontsize=11)
+for c, plot in data_set_plots['Cifar'].items():
+    plt.plot(list(plot.keys()), list(plot.values()), label='c='+str(c))
+plt.grid(True, which="both", linestyle='--')
+plt.title(
+    'Successs rate for different degrees of change \n on Cifar images', fontsize=11)
 plt.xlabel('DOC (%)')
 plt.ylabel('SR')
 plt.legend(loc='lower right')
@@ -142,62 +140,61 @@ for i, image in enumerate(tqdm(image_list, position=0)):
     image = convert_to_tensor(np.expand_dims(image, axis=0))
     label = labels[i]
     label = tf.convert_to_tensor(np.array([label]))
-    _, clipped, is_adv = attack(model_to_attack,image,label,epsilons=5)
-    if bool(is_adv[0])==True:
+    _, clipped, is_adv = attack(model_to_attack, image, label, epsilons=5)
+    if bool(is_adv[0]) == True:
         adv_list.append(np.array(clipped[0]))
         true_label.append(labels[i])
-
 ```
+
 
 Let's visualize the outputs of the softmax layers of the different models when given the adversarial images
 
 ```{python}
-adv_image_num=9
+adv_image_num = 9
 
-plt.figure(figsize=(10,10))
+plt.figure(figsize=(10, 10))
 ax = plt.subplot(3, 3, 2)
 plt.imshow(adv_list[adv_image_num].astype('int32'))
 for i, c in enumerate([0, 0.1, 0.3, 0.5, 0.7, 0.9]):
     model.load_weights(
         cfg.MODELS_PATH+'adversarial_training/Cifar/c='+str(c)+'.h5')
     ax = plt.subplot(3, 3, 3+i + 1)
-    color=['blue' for i in range(10)]
-    prediction=model.predict(np.expand_dims(adv_list[adv_image_num],axis=0))[0]
-    if np.argmax(prediction)==true_label[adv_image_num]:
-        color[true_label[adv_image_num]]='green'
+    color = ['blue' for i in range(10)]
+    prediction = model.predict(np.expand_dims(
+        adv_list[adv_image_num], axis=0))[0]
+    if np.argmax(prediction) == true_label[adv_image_num]:
+        color[true_label[adv_image_num]] = 'green'
     else:
-        color[np.argmax(prediction)]='red'
-    plt.bar(x=[i for i in range(10)], height=prediction,color=color)
+        color[np.argmax(prediction)] = 'red'
+    plt.bar(x=[i for i in range(10)], height=prediction, color=color)
     plt.title('c: '+str(c))
-
 ```
 
+
 ```{python}
-adv_image_num=2
+adv_image_num = 2
 
 
-plt.figure(figsize=(10,10))
+plt.figure(figsize=(10, 10))
 ax = plt.subplot(3, 3, 2)
 plt.imshow(adv_list[adv_image_num].astype('int32'))
 for i, c in enumerate([0, 0.1, 0.3, 0.5, 0.7, 0.9]):
     model.load_weights(
         cfg.MODELS_PATH+'adversarial_training/Cifar/c='+str(c)+'.h5')
     ax = plt.subplot(3, 3, 3+i + 1)
-    color=['blue' for i in range(10)]
-    prediction=model.predict(np.expand_dims(adv_list[adv_image_num],axis=0))[0]
-    if np.argmax(prediction)==true_label[adv_image_num]:
-        color[true_label[adv_image_num]]='green'
+    color = ['blue' for i in range(10)]
+    prediction = model.predict(np.expand_dims(
+        adv_list[adv_image_num], axis=0))[0]
+    if np.argmax(prediction) == true_label[adv_image_num]:
+        color[true_label[adv_image_num]] = 'green'
     else:
-        color[np.argmax(prediction)]='red'
-    plt.bar(x=[i for i in range(10)], height=prediction,color=color)
+        color[np.argmax(prediction)] = 'red'
+    plt.bar(x=[i for i in range(10)], height=prediction, color=color)
     plt.title('c: '+str(c))
 ```
 
 ### Against a black box attack (boundary attack)
 
-```{python}
-model=train_models()
-```
 
 #### Mnist
 
@@ -218,10 +215,13 @@ else:
         degree_of_change_with_defense = pickle.Unpickler(f).load()
 ```
 
+
 ```{python}
-plt.plot(list(degree_of_change_without_defense.keys()),list(degree_of_change_without_defense.values()),label='DOC without adversarial training')
-plt.plot(list(degree_of_change_with_defense.keys()),list(degree_of_change_with_defense.values()),label='DOC with adversarial training')
-plt.grid(True,which="both", linestyle='--')
+plt.plot(list(degree_of_change_without_defense.keys()), list(
+    degree_of_change_without_defense.values()), label='DOC without adversarial training')
+plt.plot(list(degree_of_change_with_defense.keys()), list(
+    degree_of_change_with_defense.values()), label='DOC with adversarial training')
+plt.grid(True, which="both", linestyle='--')
 plt.title('DOC of the adversarial image with respect to the number of iterations on Mnist', fontsize=8)
 plt.xlabel('Iterarion')
 plt.ylabel('DOC (%)')
@@ -250,9 +250,11 @@ else:
 ```
 
 ```{python}
-plt.plot(list(degree_of_change_without_defense.keys()),list(degree_of_change_without_defense.values()),label='DOC without adversarial training')
-plt.plot(list(degree_of_change_with_defense.keys()),list(degree_of_change_with_defense.values()),label='DOC with adversarial training')
-plt.grid(True,which="both", linestyle='--')
+plt.plot(list(degree_of_change_without_defense.keys()), list(
+    degree_of_change_without_defense.values()), label='DOC without adversarial training')
+plt.plot(list(degree_of_change_with_defense.keys()), list(
+    degree_of_change_with_defense.values()), label='DOC with adversarial training')
+plt.grid(True, which="both", linestyle='--')
 plt.title('DOC of the adversarial image with respect to the number of iterations on Cifar', fontsize=8)
 plt.xlabel('Iterarion')
 plt.ylabel('DOC (%)')

@@ -25,8 +25,8 @@ from adv_benchmark.config import get_cfg
 
 
 def pick_data_set(name):
-    '''
-    This fonction return a training and testing set 
+    """
+    This fonction return a training and testing set
     input:
     -name : 'Cifar' or 'Mnist'
     output:
@@ -35,46 +35,44 @@ def pick_data_set(name):
     -y_train: list of 50000 one hot encoded vectors
     -y_test: list of 10000 one hot encoded vectors
 
-    '''
+    """
 
-    if name=='Mnist':
-        data_mnist=datasets.mnist.load_data(path='mnist.npz')
-        X_train_mnist,y_train=data_mnist[0][0],data_mnist[0][1]
-        X_test_mnist,y_test=data_mnist[1][0],data_mnist[1][1]
-        y_train = to_categorical(y_train, 10)
-        y_test = to_categorical(y_test, 10)
+    if name.lower() == "mnist":
+        data_mnist = datasets.mnist.load_data(path="mnist.npz")
+        X_train_mnist, y_train = data_mnist[0][0], data_mnist[0][1]  # pylint: disable=invalid-name
+        X_test_mnist, y_test = data_mnist[1][0], data_mnist[1][1]  ## pylint: disable=invalid-name
+        y_train, y_test = to_categorical(y_train, 10), to_categorical(y_test, 10)
 
         X_train = np.full((60000, 32, 32, 3), 0)
-        for i, s in enumerate(X_train_mnist):
-            X_train[i] = cv2.cvtColor(np.pad(s,2), cv2.COLOR_GRAY2RGB) 
-            
         X_test = np.full((10000, 32, 32, 3), 0)
-        for i, s in enumerate(X_test_mnist):
-            X_test[i] = cv2.cvtColor(np.pad(s,2), cv2.COLOR_GRAY2RGB) 
-        
-    
-    elif name=='Cifar':
-        (X_train, y_train), (X_test, y_test), _,_=load_dataset('cifar10')
-        for i, im in enumerate(X_train):
-            X_train[i]=255*im
-        for i, im in enumerate(X_test):
-            X_test[i]=255*im 
 
-    return(X_train,X_test,y_train,y_test)
+        prep_func = lambda img: cv2.cvtColor(np.pad(img, 2), cv2.COLOR_GRAY2RGB)
 
+        for i, img in enumerate(X_train_mnist):
+            X_train[i] = prep_func(img)
 
+        for i, img in enumerate(X_test_mnist):
+            X_test[i] = prep_func(img)
 
+    elif name == "Cifar":
+        (X_train, y_train), (X_test, y_test), _, _ = load_dataset("cifar10")
+        for i, img in enumerate(X_train):
+            X_train[i] = 255 * img
+        for i, img in enumerate(X_test):
+            X_test[i] = 255 * img
+
+    return (X_train, X_test, y_train, y_test)
 
 
 def train_and_save_effnet(data_set_name):
-    '''
+    """
     This fonction train (or load) and save an instance of EfficientNet
     -name : 'Cifar' or 'Mnist'
     output:
     -model_effnet (tensorflow model): trained instance of EfficientNet
 
-    '''
-    (X_train,X_test,y_train,y_test)=pick_data_set(data_set_name)
+    """
+    (X_train, _, y_train, _) = pick_data_set(data_set_name)
     tf.keras.backend.clear_session()
     effnet_base = EfficientNetB7(
         weights="imagenet", include_top=False, input_shape=(32, 32, 3)
@@ -111,7 +109,7 @@ def train_and_save_effnet(data_set_name):
 
 
 def train_and_save_small_model(data_set_name):
-    '''
+    """
     This fonction train (or load) and save an instance of a small custom CNN
     -name : 'Cifar' or 'Mnist'
     output:
@@ -124,14 +122,13 @@ def train_and_save_small_model(data_set_name):
         (X_train, _, y_train, _) = pick_data_set(data_set_name)
         tf.keras.backend.clear_session()
         small_model = tf.keras.models.Sequential()
-        small_model.add(Conv2D(64, (3, 3), activation='relu', input_shape=(32,32,3)))
+        small_model.add(Conv2D(64, (3, 3), activation="relu", input_shape=(32, 32, 3)))
         small_model.add(MaxPooling2D(2, 2))
-        small_model.add(Conv2D(64, (3, 3), activation='relu'))
+        small_model.add(Conv2D(64, (3, 3), activation="relu"))
         small_model.add(MaxPooling2D(2, 2))
         small_model.add(Flatten())
-        small_model.add(Dense(128, activation='relu'))
-        small_model.add(Dense(10, activation='softmax'))
-
+        small_model.add(Dense(128, activation="relu"))
+        small_model.add(Dense(10, activation="softmax"))
 
         small_model.compile(
             loss="categorical_crossentropy", optimizer="nadam", metrics=["accuracy"]

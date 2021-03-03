@@ -49,26 +49,28 @@ tf.config.run_functions_eagerly(True)
 ## Vizualisation of the padding
 
 ```{python}
-model_with_def=create_model_with_defense('Mnist')
-(X_train,X_test,y_train,y_test)=pick_data_set('Mnist')
+model_with_def = create_model_with_defense('Mnist')
+(X_train, X_test, y_train, y_test) = pick_data_set('Mnist')
 desiredOutputs = model_with_def.layers[0].output
 newModel = Model(model_with_def.inputs, desiredOutputs)
 
-plt.figure(figsize=(25,25))
-for i,image in enumerate(X_test[:9]): 
+plt.figure(figsize=(25, 25))
+for i, image in enumerate(X_test[:9]):
     ax = plt.subplot(3, 3, i + 1)
-    plt.imshow(np.squeeze(newModel.predict(np.expand_dims(X_test[i],axis=0))).astype('int32'))
+    plt.imshow(np.squeeze(newModel.predict(
+        np.expand_dims(X_test[i], axis=0))).astype('int32'))
     plt.axis("off")
 
 ```
 
 ##  Defense against white box attacks
 
+
 ```{python}
 def run_white_boxes(data_set_name):
-    (X_train,X_test,y_train,y_test)=pick_data_set(data_set_name)
+    (X_train, X_test, y_train, y_test) = pick_data_set(data_set_name)
     print('====training model without padding====')
-    model_effnet=train_and_save_effnet(data_set_name)
+    model_effnet = train_and_save_effnet(data_set_name)
     print('====training model with padding====')
     model_with_def = create_model_with_defense(data_set_name)
 
@@ -76,8 +78,9 @@ def run_white_boxes(data_set_name):
 
     if exists(cfg.DATA_PATH+'/efficiency_random_padding/random_padding_efficiency_'+str(data_set_name)) == False:
         print('====attacks on model with padding====')
-        SR_FGSM_dic_with_defense,_=attack_runner(model_with_def,model_with_def,X_test[:100], y_test[:100], [0.1,1,5,10,25,50,75,100])
-        
+        SR_FGSM_dic_with_defense, _ = attack_runner(
+            model_with_def, model_with_def, X_test[:100], y_test[:100], [0.1, 1, 5, 10, 25, 50, 75, 100])
+
         print('====attacks on model without padding====')
         SR_FGSM_dic_without_defense, _ = attack_runner(
             model_without_def, model_without_def, X_test[:100], y_test[:100], [0.1, 1, 5, 10, 25, 50, 75, 100])
@@ -95,14 +98,17 @@ def run_white_boxes(data_set_name):
 ### Mnist
 
 ```{python}
-SR_FGSM_dic_without_defense,SR_FGSM_dic_with_defense=run_white_boxes('Mnist')
+SR_FGSM_dic_without_defense, SR_FGSM_dic_with_defense = run_white_boxes(
+    'Mnist')
 ```
 
 ```{python}
-plt.plot(list(SR_FGSM_dic_with_defense.keys()),list(SR_FGSM_dic_with_defense.values()),label='with random padding')
-plt.plot(list(SR_FGSM_dic_without_defense.keys()),list(SR_FGSM_dic_without_defense.values()),label='without random padding')
-plt.grid(True,which="both", linestyle='--')
-plt.title('Successs rate for different degrees of change \n on Mnist images for the effnet model',fontsize=11)
+plt.plot(list(SR_FGSM_dic_with_defense.keys()), list(
+    SR_FGSM_dic_with_defense.values()), label='with random padding')
+plt.plot(list(SR_FGSM_dic_without_defense.keys()), list(
+    SR_FGSM_dic_without_defense.values()), label='without random padding')
+plt.grid(True, which="both", linestyle='--')
+plt.title('Successs rate for different degrees of change \n on Mnist images for the effnet model', fontsize=11)
 plt.xlabel('DOC (%)')
 plt.ylabel('SR')
 plt.legend(loc='lower right')
@@ -111,14 +117,17 @@ plt.legend(loc='lower right')
 ### Cifar
 
 ```{python}
-SR_FGSM_dic_without_defense,SR_FGSM_dic_with_defense=run_white_boxes('Cifar')
+SR_FGSM_dic_without_defense, SR_FGSM_dic_with_defense = run_white_boxes(
+    'Cifar')
 ```
 
 ```{python}
-plt.plot(list(SR_FGSM_dic_with_defense.keys()),list(SR_FGSM_dic_with_defense.values()),label='with random padding')
-plt.plot(list(SR_FGSM_dic_without_defense.keys()),list(SR_FGSM_dic_without_defense.values()),label='without random padding')
-plt.grid(True,which="both", linestyle='--')
-plt.title('Successs rate for different degrees of change \n on Cifar images for the effnet model',fontsize=11)
+plt.plot(list(SR_FGSM_dic_with_defense.keys()), list(
+    SR_FGSM_dic_with_defense.values()), label='with random padding')
+plt.plot(list(SR_FGSM_dic_without_defense.keys()), list(
+    SR_FGSM_dic_without_defense.values()), label='without random padding')
+plt.grid(True, which="both", linestyle='--')
+plt.title('Successs rate for different degrees of change \n on Cifar images for the effnet model', fontsize=11)
 plt.xlabel('DOC (%)')
 plt.ylabel('SR')
 plt.legend(loc='lower right')
@@ -130,11 +139,11 @@ plt.legend(loc='lower right')
 #### Mnist
 
 ```{python}
-(X_train,X_test,y_train,y_test)=pick_data_set('Mnist')
+(X_train, X_test, y_train, y_test) = pick_data_set('Mnist')
 print('====training model without padding====')
-model_without_defense=train_and_save_effnet('Mnist')
+model_without_defense = train_and_save_effnet('Mnist')
 print('====training model with padding====')
-model_with_defense=create_model_with_defense('Mnist')
+model_with_defense = create_model_with_defense('Mnist')
 ```
 
 ```{python}
@@ -153,10 +162,13 @@ else:
         degree_of_change_with_defense = pickle.Unpickler(f).load()
 ```
 
+
 ```{python}
-plt.plot(list(degree_of_change_without_defense.keys()),list(degree_of_change_without_defense.values()),label='DOC without random padding')
-plt.plot(list(degree_of_change_with_defense.keys()),list(degree_of_change_with_defense.values()),label='DOC with random padding')
-plt.grid(True,which="both", linestyle='--')
+plt.plot(list(degree_of_change_without_defense.keys()), list(
+    degree_of_change_without_defense.values()), label='DOC without random padding')
+plt.plot(list(degree_of_change_with_defense.keys()), list(
+    degree_of_change_with_defense.values()), label='DOC with random padding')
+plt.grid(True, which="both", linestyle='--')
 plt.title('DOC of the adversarial image with respect to the number of iterations on EfficientNet on Mnist', fontsize=8)
 plt.xlabel('Iterarion')
 plt.ylabel('DOC (%)')
@@ -168,11 +180,11 @@ plt.show()
 #### Cifar
 
 ```{python}
-(X_train,X_test,y_train,y_test)=pick_data_set('Cifar')
+(X_train, X_test, y_train, y_test) = pick_data_set('Cifar')
 print('====training model without padding====')
-model_without_defense=train_and_save_effnet('Cifar')
+model_without_defense = train_and_save_effnet('Cifar')
 print('====training model with padding====')
-model_with_defense=create_model_with_defense('Cifar')
+model_with_defense = create_model_with_defense('Cifar')
 ```
 
 ```{python}
@@ -192,9 +204,11 @@ else:
 ```
 
 ```{python}
-plt.plot(list(degree_of_change_without_defense.keys()),list(degree_of_change_without_defense.values()),label='DOC without random padding')
-plt.plot(list(degree_of_change_with_defense.keys()),list(degree_of_change_with_defense.values()),label='DOC with random padding')
-plt.grid(True,which="both", linestyle='--')
+plt.plot(list(degree_of_change_without_defense.keys()), list(
+    degree_of_change_without_defense.values()), label='DOC without random padding')
+plt.plot(list(degree_of_change_with_defense.keys()), list(
+    degree_of_change_with_defense.values()), label='DOC with random padding')
+plt.grid(True, which="both", linestyle='--')
 plt.title('DOC of the adversarial image with respect to the number of iterations on EfficientNet on Cifar', fontsize=8)
 plt.xlabel('Iterarion')
 plt.ylabel('DOC (%)')

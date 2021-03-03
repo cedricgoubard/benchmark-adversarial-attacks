@@ -46,35 +46,37 @@ tf.config.experimental.set_virtual_device_configuration(
 cfg = get_cfg("../config.yaml")
 ```
 
-###  Test of the denoiser againt white box attackw (FGSM)
+###  Test of the denoiser againt white box attack (FGSM)
 
 ```{python}
 def total_run(data_set_name):
     print("====data set selection====")
-    (X_train,X_test,y_train,y_test)=pick_data_set(data_set_name)
+    (X_train, X_test, y_train, y_test) = pick_data_set(data_set_name)
     print("====benign model training====")
-    model_effnet=train_and_save_effnet(data_set_name)
+    model_effnet = train_and_save_effnet(data_set_name)
     print("====adversarial data set creation====")
-    (adv_list,benign_list,adv_true_label)=make_adv_data_set(data_set_name,model_effnet)
+    (adv_list, benign_list, adv_true_label) = make_adv_data_set(
+        data_set_name, model_effnet)
     autoencoder = Denoise()
     print("====Denoiser training====")
-    autoencoder.compile(optimizer='adam', loss=tf.keras.losses.MeanSquaredError(),metrics=['MeanSquaredError'])
-    autoencoder.fit(np.array(adv_list[:len(adv_list)-1000]),np.array(benign_list[:len(adv_list)-1000]),
-                epochs=30,
-                batch_size=32,
-                shuffle=True)
-    
-    autoencoder.trainable=False
-    inputs=Input(shape=(32,32,3))
-    x=autoencoder(inputs)
-    o=model_effnet(x)
-    model_with_defense=Model(inputs,[o])
+    autoencoder.compile(optimizer='adam', loss=tf.keras.losses.MeanSquaredError(
+    ), metrics=['MeanSquaredError'])
+    autoencoder.fit(np.array(adv_list[:len(adv_list)-1000]), np.array(benign_list[:len(adv_list)-1000]),
+                    epochs=30,
+                    batch_size=32,
+                    shuffle=True)
+
+    autoencoder.trainable = False
+    inputs = Input(shape=(32, 32, 3))
+    x = autoencoder(inputs)
+    o = model_effnet(x)
+    model_with_defense = Model(inputs, [o])
 
     model_with_defense.compile(
         loss='categorical_crossentropy',
         optimizer='nadam',
         metrics=['accuracy']
-        )
+    )
     print("====Adversarial attacks on model+denoiser====")
     if exists(cfg.DATA_PATH+'efficiency_denoiser/denosier_efficiency_white_box_'+str(data_set_name)) == False:
         SR_FGSM_dic_without_defense, SR_FGSM_dic_with_defense = attack_runner(
@@ -90,30 +92,36 @@ def total_run(data_set_name):
 ```
 
 ```{python}
-(SR_FGSM_dic_without_defense,SR_FGSM_dic_with_defense)=total_run('Mnist')
+(SR_FGSM_dic_without_defense, SR_FGSM_dic_with_defense) = total_run('Mnist')
 ```
 
 ```{python}
-plt.plot(list(SR_FGSM_dic_with_defense.keys()),list(SR_FGSM_dic_with_defense.values()),label='with denoiser')
-plt.plot(list(SR_FGSM_dic_without_defense.keys()),list(SR_FGSM_dic_without_defense.values()),label='without denoiser')
+plt.plot(list(SR_FGSM_dic_with_defense.keys()), list(
+    SR_FGSM_dic_with_defense.values()), label='with denoiser')
+plt.plot(list(SR_FGSM_dic_without_defense.keys()), list(
+    SR_FGSM_dic_without_defense.values()), label='without denoiser')
 # plt.xscale('log')
-plt.grid(True,which="both", linestyle='--')
-plt.title('Successs rate for different degrees of change \n on Mnist images',fontsize=11)
+plt.grid(True, which="both", linestyle='--')
+plt.title(
+    'Successs rate for different degrees of change \n on Mnist images', fontsize=11)
 plt.xlabel('DOC (%)')
 plt.ylabel('SR')
 plt.legend(loc='lower right')
 ```
 
 ```{python}
-(SR_FGSM_dic_without_defense,SR_FGSM_dic_with_defense)=total_run('Cifar')
+(SR_FGSM_dic_without_defense, SR_FGSM_dic_with_defense) = total_run('Cifar')
 ```
 
 ```{python}
-plt.plot(list(SR_FGSM_dic_with_defense.keys()),list(SR_FGSM_dic_with_defense.values()),label='with denoiser')
-plt.plot(list(SR_FGSM_dic_without_defense.keys()),list(SR_FGSM_dic_without_defense.values()),label='without denoiser')
+plt.plot(list(SR_FGSM_dic_with_defense.keys()), list(
+    SR_FGSM_dic_with_defense.values()), label='with denoiser')
+plt.plot(list(SR_FGSM_dic_without_defense.keys()), list(
+    SR_FGSM_dic_without_defense.values()), label='without denoiser')
 # plt.xscale('log')
-plt.grid(True,which="both", linestyle='--')
-plt.title('Successs rate for different degrees of change \n on Cifar images',fontsize=11)
+plt.grid(True, which="both", linestyle='--')
+plt.title(
+    'Successs rate for different degrees of change \n on Cifar images', fontsize=11)
 plt.xlabel('DOC (%)')
 plt.ylabel('SR')
 plt.legend(loc='lower right')
@@ -124,33 +132,35 @@ plt.legend(loc='lower right')
 ```{python}
 def prep_models(data_set_name):
 
-    (X_train,X_test,y_train,y_test)=pick_data_set(data_set_name)
-    model_effnet=train_and_save_effnet(data_set_name)
-    (adv_list,benign_list,adv_true_label)=make_adv_data_set(data_set_name,model_effnet)
+    (X_train, X_test, y_train, y_test) = pick_data_set(data_set_name)
+    model_effnet = train_and_save_effnet(data_set_name)
+    (adv_list, benign_list, adv_true_label) = make_adv_data_set(
+        data_set_name, model_effnet)
 
     autoencoder = Denoise()
-    autoencoder.compile(optimizer='adam', loss=tf.keras.losses.MeanSquaredError(),metrics=['MeanSquaredError'])
-    autoencoder.fit(np.array(adv_list[:len(adv_list)-1000]),np.array(benign_list[:len(adv_list)-1000]),
-                epochs=30,
-                batch_size=32,
-                shuffle=True)
+    autoencoder.compile(optimizer='adam', loss=tf.keras.losses.MeanSquaredError(
+    ), metrics=['MeanSquaredError'])
+    autoencoder.fit(np.array(adv_list[:len(adv_list)-1000]), np.array(benign_list[:len(adv_list)-1000]),
+                    epochs=30,
+                    batch_size=32,
+                    shuffle=True)
 
-    autoencoder.trainable=False
-    inputs=Input(shape=(32,32,3))
-    x=autoencoder(inputs)
-    o=model_effnet(x)
-    model_with_defense=Model(inputs,[o])
+    autoencoder.trainable = False
+    inputs = Input(shape=(32, 32, 3))
+    x = autoencoder(inputs)
+    o = model_effnet(x)
+    model_with_defense = Model(inputs, [o])
     model_with_defense.compile(
         loss='categorical_crossentropy',
         optimizer='nadam',
         metrics=['accuracy']
-        )
-    return(X_train,X_test,y_train,y_test,adv_list,benign_list,adv_true_label,model_with_defense,model_effnet)
-
+    )
+    return(X_train, X_test, y_train, y_test, adv_list, benign_list, adv_true_label, model_with_defense, model_effnet)
 ```
 
 ```{python}
-(X_train,X_test,y_train,y_test,adv_list,benign_list,adv_true_label,model_with_defense,model_effnet)=prep_models('Mnist')
+(X_train, X_test, y_train, y_test, adv_list, benign_list,
+ adv_true_label, model_with_defense, model_effnet) = prep_models('Mnist')
 ```
 
 ```{python}
@@ -169,10 +179,13 @@ else:
         degree_of_change_with_defense = pickle.Unpickler(f).load()
 ```
 
+
 ```{python}
-plt.plot(list(degree_of_change_without_defense.keys()),list(degree_of_change_without_defense.values()),label='DOC without denoiser')
-plt.plot(list(degree_of_change_with_defense.keys()),list(degree_of_change_with_defense.values()),label='DOC with denoiser')
-plt.grid(True,which="both", linestyle='--')
+plt.plot(list(degree_of_change_without_defense.keys()), list(
+    degree_of_change_without_defense.values()), label='DOC without denoiser')
+plt.plot(list(degree_of_change_with_defense.keys()), list(
+    degree_of_change_with_defense.values()), label='DOC with denoiser')
+plt.grid(True, which="both", linestyle='--')
 plt.title('DOC of the adversarial image with respect to the number of iterations on EfficientNet on Mnist', fontsize=8)
 plt.xlabel('Iterarion')
 plt.ylabel('DOC (%)')
@@ -182,39 +195,44 @@ plt.show()
 ```
 
 ```{python}
-(X_train,X_test,y_train,y_test,adv_list,benign_list,adv_true_label,model_with_defense,model_effnet)=prep_models('Cifar')
+(X_train, X_test, y_train, y_test, adv_list, benign_list,
+ adv_true_label, model_with_defense, model_effnet) = prep_models('Cifar')
 ```
 
 ```{python}
-dict_classes=Config.CIFAR_CLASSES
+dict_classes = cfg.CIFAR_CLASSES
 ```
 
 #### Let's visualize the effects of the denoiser on some images (adversarial and not adversarial)
 
 ```{python}
-plt.figure(figsize=(25,45))
-for i,(adv_image, true_label) in enumerate(zip(adv_list[len(adv_list)-1000:len(adv_list)-1000+8],adv_true_label[len(adv_list)-1000:len(adv_list)-1000+8])): 
-    
-    i=2*i
+plt.figure(figsize=(25, 45))
+for i, (adv_image, true_label) in enumerate(zip(adv_list[len(adv_list)-1000:len(adv_list)-1000+8], adv_true_label[len(adv_list)-1000:len(adv_list)-1000+8])):
+    print(i)
+    i = 2*i
     ax = plt.subplot(8, 2, i + 1)
     plt.imshow(adv_image.astype('int64'))
-    predicted_adv_label=dict_classes[np.argmax(model_effnet.predict(np.expand_dims(adv_image,axis=0)))]
-    true_label=dict_classes[true_label]
-    if true_label==predicted_adv_label:
-        color='green'
+    predicted_adv_label = dict_classes[np.argmax(
+        model_effnet.predict(np.expand_dims(adv_image, axis=0)))]
+    true_label = dict_classes[true_label]
+    if true_label == predicted_adv_label:
+        color = 'green'
     else:
-        color='red'
-    plt.title('true label: '+str(true_label)+'\n predicted_label: '+str(predicted_adv_label),color=color)
-    
+        color = 'red'
+    plt.title('true label: '+str(true_label)+'\n predicted_label: ' +
+              str(predicted_adv_label), color=color)
+
     ax = plt.subplot(8, 2, i + 2)
-    new_image=model_with_defense.layers[1](np.expand_dims(adv_image,axis=0))
-    predicted_label=dict_classes[np.argmax(model_with_defense.predict(new_image))]
+    new_image = model_with_defense.layers[1](np.expand_dims(adv_image, axis=0))
+    predicted_label = dict_classes[np.argmax(
+        model_with_defense.predict(new_image))]
     plt.imshow(np.squeeze(new_image).astype('int64'))
-    if true_label==predicted_label:
-        color='green'
+    if true_label == predicted_label:
+        color = 'green'
     else:
-        color='red'
-    plt.title('true label: '+str(true_label)+'\n predicted_label: '+str(predicted_label),color=color)
+        color = 'red'
+    plt.title('true label: '+str(true_label) +
+              '\n predicted_label: '+str(predicted_label), color=color)
     plt.axis("off")
 plt.show()
 ```
@@ -235,10 +253,13 @@ else:
         degree_of_change_with_defense = pickle.Unpickler(f).load()
 ```
 
+
 ```{python}
-plt.plot(list(degree_of_change_without_defense.keys()),list(degree_of_change_without_defense.values()),label='DOC without denoiser')
-plt.plot(list(degree_of_change_with_defense.keys()),list(degree_of_change_with_defense.values()),label='DOC with denoiser')
-plt.grid(True,which="both", linestyle='--')
+plt.plot(list(degree_of_change_without_defense.keys()), list(
+    degree_of_change_without_defense.values()), label='DOC without denoiser')
+plt.plot(list(degree_of_change_with_defense.keys()), list(
+    degree_of_change_with_defense.values()), label='DOC with denoiser')
+plt.grid(True, which="both", linestyle='--')
 plt.title('DOC of the adversarial image with respect to the number of iterations on EfficientNet on Cifar', fontsize=8)
 plt.xlabel('Iterarion')
 plt.ylabel('DOC (%)')

@@ -95,72 +95,76 @@ with open(cfg.DATA_PATH+'perfs_models_without_defense/perfs_global_model_effnet_
 ### Plot
 
 ```{python}
-x_min=-10
-x_max=200
-y_min=0
-y_max=1.3
+x_min = -10
+x_max = 200
+y_min = 0
+y_max = 1.3
 
-plt.rcParams["figure.figsize"] = 21,14
+plt.rcParams["figure.figsize"] = 21, 14
 colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-fig, ax = plt.subplots(ncols=2, nrows=3, gridspec_kw={"height_ratios":[0.01,1,1],"width_ratios":[0.5,1]})
-fig.suptitle('Defense strategies effectiveness against whit box attacks', 
+fig, ax = plt.subplots(ncols=2, nrows=3, gridspec_kw={
+                       "height_ratios": [0.01, 1, 1], "width_ratios": [0.5, 1]})
+fig.suptitle('Defense strategies effectiveness against whit box attacks',
              fontsize=20, fontweight='bold')
 
 
 ax[0][0].axis("off")
-ax[0][0].set_title("Data Set / Model", fontweight='bold',fontsize=15)
+ax[0][0].set_title("Data Set / Model", fontweight='bold', fontsize=15)
 
 
 ax[0][1].axis("off")
-ax[0][1].set_title("EfficentNet", fontweight='bold',fontsize=15)
+ax[0][1].set_title("EfficentNet", fontweight='bold', fontsize=15)
 
 
 ax[1][0].axis("off")
-ax[1][0].set_title("Cifar Data set", fontweight='bold',fontsize=15)
+ax[1][0].set_title("Cifar Data set", fontweight='bold', fontsize=15)
 
 
 ax[2][0].axis("off")
-ax[2][0].set_title("Mnist Data set", fontweight='bold',fontsize=15)
+ax[2][0].set_title("Mnist Data set", fontweight='bold', fontsize=15)
 
 
-ax[1][1].plot(list(SR_FGSM_dic_with_padding_Cifar.keys()),list(SR_FGSM_dic_with_padding_Cifar.values()),label='padding')
-ax[1][1].plot(list(plots_Cifar[0.9].keys()),list(plots_Cifar[0.9].values()),label='Adversarial Training')
-ax[1][1].plot(list(SR_FGSM_dic_with_denoiser_Cifar.keys()),list(SR_FGSM_dic_with_denoiser_Cifar.values()),label='Denoiser')
-ax[1][1].plot(list(SR_FGSM_dic_without_denoiser_Cifar.keys()),list(SR_FGSM_dic_without_denoiser_Cifar.values()),label='without defense')
-ax[1][1].grid(True,which="both", linestyle='--')
-ax[1][1].set_title('Successs rate of FGSM for different defense strategies',fontsize=11)
+ax[1][1].plot(list(SR_FGSM_dic_with_padding_Cifar.keys()), list(
+    SR_FGSM_dic_with_padding_Cifar.values()), label='padding')
+ax[1][1].plot(list(plots_Cifar[0.9].keys()), list(
+    plots_Cifar[0.9].values()), label='Adversarial Training')
+ax[1][1].plot(list(SR_FGSM_dic_with_denoiser_Cifar.keys()), list(
+    SR_FGSM_dic_with_denoiser_Cifar.values()), label='Denoiser')
+ax[1][1].plot(list(SR_FGSM_dic_without_denoiser_Cifar.keys()), list(
+    SR_FGSM_dic_without_denoiser_Cifar.values()), label='without defense')
+ax[1][1].grid(True, which="both", linestyle='--')
+ax[1][1].set_title(
+    'Successs rate of FGSM for different defense strategies', fontsize=11)
 ax[1][1].set_xlabel('DOC (%)')
 ax[1][1].set_ylabel('SR')
 ax[1][1].legend(loc='lower right')
-ax[1][1].set_xlim(x_min,x_max)
-ax[1][1].set_ylim(y_min,y_max)
+ax[1][1].set_xlim(x_min, x_max)
+ax[1][1].set_ylim(y_min, y_max)
 
 
-
-
-
-
-ax[2][1].plot(list(SR_FGSM_dic_with_padding_Mnist.keys()),list(SR_FGSM_dic_with_padding_Mnist.values()),label='padding')
-ax[2][1].plot(list(plots_Mnist[0.9].keys()),list(plots_Mnist[0.9].values()),label='Adversarial Training')
-ax[2][1].plot(list(SR_FGSM_dic_with_denoiser_Mnist.keys()),list(SR_FGSM_dic_with_denoiser_Mnist.values()),label='Denoiser')
-ax[2][1].plot(list(SR_FGSM_dic_model_effnet_Mnist.keys()),list(SR_FGSM_dic_model_effnet_Mnist.values()),label='without defense')
-ax[2][1].grid(True,which="both", linestyle='--')
-ax[2][1].set_title('Successs rate of FGSM for different defense strategies',fontsize=11)
+ax[2][1].plot(list(SR_FGSM_dic_with_padding_Mnist.keys()), list(
+    SR_FGSM_dic_with_padding_Mnist.values()), label='padding')
+ax[2][1].plot(list(plots_Mnist[0.9].keys()), list(
+    plots_Mnist[0.9].values()), label='Adversarial Training')
+ax[2][1].plot(list(SR_FGSM_dic_with_denoiser_Mnist.keys()), list(
+    SR_FGSM_dic_with_denoiser_Mnist.values()), label='Denoiser')
+ax[2][1].plot(list(SR_FGSM_dic_model_effnet_Mnist.keys()), list(
+    SR_FGSM_dic_model_effnet_Mnist.values()), label='without defense')
+ax[2][1].grid(True, which="both", linestyle='--')
+ax[2][1].set_title(
+    'Successs rate of FGSM for different defense strategies', fontsize=11)
 ax[2][1].set_xlabel('DOC (%)')
 ax[2][1].set_ylabel('SR')
 ax[2][1].legend(loc='upper left')
-ax[2][1].set_xlim(x_min,x_max)
-ax[2][1].set_ylim(y_min,y_max)
+ax[2][1].set_xlim(x_min, x_max)
+ax[2][1].set_ylim(y_min, y_max)
 
 
-
-
-
-fig.subplots_adjust(hspace=0.5,bottom=0.1)
+fig.subplots_adjust(hspace=0.5, bottom=0.1)
 plt.show()
 ```
 
-## Black box 
+## Black box
 
 
 ### Random padding
@@ -222,7 +226,7 @@ y_max=70
 plt.rcParams["figure.figsize"] = 21,14
 colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 fig, ax = plt.subplots(ncols=2, nrows=3, gridspec_kw={"height_ratios":[0.01,1,1],"width_ratios":[0.5,1]})
-fig.suptitle('Defense strategies effectiveness agaist boundary attack', 
+fig.suptitle('Defense strategies effectiveness agaist boundary attack',
              fontsize=20, fontweight='bold')
 
 
