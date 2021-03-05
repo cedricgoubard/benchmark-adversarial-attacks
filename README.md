@@ -1,6 +1,6 @@
 # Adversarial attacks & defence strategies benchmark
 
-This project hosts several notebooks and snippets used to build our benchmark.
+This project hosts several notebooks and snippets used to build [our benchmark](https://medium.com/meetech/adversarial-learning-benchmark-evaluating-attack-and-defence-strategies-48085ab3ac3).
 
 ## Getting started
 You will need to use a UNIX-based server with:
